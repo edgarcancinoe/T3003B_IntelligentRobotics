@@ -10,7 +10,9 @@ J \ddot{q} + k\, \dot{q} + m\, g \, a \, \cos{(q)} = \tau
 ```
 
 ```math
-\ddot{x_1} = x_2
+\dot{x_1} = x_2\\
+\dot{x_1} = x_2
+
 ```
 
 ##### Angular position and velocity vs Time
