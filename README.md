@@ -8,7 +8,9 @@ State-space representation of the dynamics of a pendulum system
 ```math
 J \ddot{q} + k\, \dot{q} + m\, g \, a \, \cos{(q)} = \tau
 ```
-Let x_1 = 1,
+Let ```math
+x_1
+``` = 1,
 
 ```math
 \dot{x_1} = x_2
