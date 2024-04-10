@@ -6,8 +6,9 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 ---
 State-space representation of the dynamics of a pendulum system
 <p align="right">
-
+```math
 SE = \frac{\sigma}{\sqrt{n}}q\dot{.}\dot{}
+```
 </p>
 
 
