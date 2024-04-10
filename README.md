@@ -7,8 +7,12 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 State-space representation of the dynamics of a pendulum system
 ```math
 J \ddot{q} + k\, \dot{q} + m\, g \, a \, \cos{(q)} = \tau
-
 ```
+
+```math
+\ddot{x_1} = x_2
+```
+
 ##### Angular position and velocity vs Time
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/q_qdot_vs_time.png" width="500">
 
