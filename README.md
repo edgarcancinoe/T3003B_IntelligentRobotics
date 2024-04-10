@@ -5,12 +5,9 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
 State-space representation of the dynamics of a pendulum system
-<p align="right">
 ```math
 SE = \frac{\sigma}{\sqrt{n}}
 ```
-</p>
-
 
 ##### Angular position and velocity vs Time
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/q_qdot_vs_time.png" width="500">
