@@ -15,7 +15,7 @@ Let  $x_1$ = $q$  and  $x_2 = 2$:
 ```
 
 ```math
-\dot{x_2} = \frac{1}{J}(\tau - m\, g \, a \, \cos{(x_1)} - k\,x_2)
+\dot{x_2} = \frac{1}{J}(\tau - mga\cos{(x_1)} - k\,x_2)
 ```
 
 ##### Angular position and velocity vs Time
