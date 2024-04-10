@@ -8,11 +8,14 @@ State-space representation of the dynamics of a pendulum system
 ```math
 J \ddot{q} + k\, \dot{q} + m\, g \, a \, \cos{(q)} = \tau
 ```
+Let x_1 = 1,
 
 ```math
-\dot{x_1} = x_2\\
 \dot{x_1} = x_2
+```
 
+```math
+\dot{x_2} = \frac{1}{J}(\tau - m\, g \, a \, \cos{(x_1)} - k\,x_2)
 ```
 
 ##### Angular position and velocity vs Time
