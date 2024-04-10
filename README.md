@@ -17,7 +17,7 @@ Let  $x_1$ = $q$  and  $x_2 = 2$:
 ```math
 \dot{x_2} = \frac{1}{J}(\tau - mga\cos{(x_1)} - k\,x_2)
 ```
-Where link has inertia $J$ and the centre of mass, $m$, is located at $\text_bf{x}$, a distance $a$ from the origin (point of rotation), and $k$ is the friction coefficient.
+Where link has inertia $J$ and the centre of mass, $m$, is located at $\textbf{x}$, a distance $a$ from the origin (point of rotation), and $k$ is the friction coefficient.
 
 ```math
 J = \frac{4}{3}ma^{2}
