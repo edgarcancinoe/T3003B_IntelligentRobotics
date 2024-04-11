@@ -1,9 +1,10 @@
 # T3003B_IntelligentRobotics
 Class T3003B: Integration of Robotics and Intelligent Systems
 
+---
+
 ### Week 1: Challenge
 
----
 State-space representation of the dynamics of a pendulum system:
 ```math
 J \ddot{q} + k\, \dot{q} + mga\cos{(q)} = \tau
