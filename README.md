@@ -30,7 +30,7 @@ a = \frac{l}{2}
 
 ##### 
 
-Angular position and velocity vs Time             |  Phase Diagram for angular postion and velocity
+Angular position and angular velocity VS Time             |  Phase Diagram for angular postion and angular velocity
 :-------------------------:|:-------------------------:
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/q_qdot_vs_time.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/phase_diagram.png" width="500">
 
