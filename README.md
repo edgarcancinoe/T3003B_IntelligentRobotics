@@ -4,11 +4,11 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 ### Week 1: Challenge
 
 ---
-State-space representation of the dynamics of a pendulum system
+State-space representation of the dynamics of a pendulum system:
 ```math
 J \ddot{q} + k\, \dot{q} + mga\cos{(q)} = \tau
 ```
-Let  $x_1$ = $q$  and  $x_2 = 2$:
+Let  $x_1$ = $q$  and  $x_2 = 2$,
 
 ```math
 \dot{x_1} = x_2
@@ -22,7 +22,7 @@ Where link has inertia $J$ and the centre of mass, $m$, is located at $\textbf{x
 ```math
 J = \frac{4}{3}ma^{2}
 ```
-For this case since it is a uniform rod, the centr of mass is located at the centre of the rod, then:
+For this case, since it is a uniform rod, the center of mass is located at the center of the rod. Then:
 
 ```math
 a = \frac{l}{2}
