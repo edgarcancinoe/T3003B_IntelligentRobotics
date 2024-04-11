@@ -35,6 +35,6 @@ Angular position and velocity vs Time             |  Phase Diagram for angular p
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/q_qdot_vs_time.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/phase_diagram.png" width="500">
 
 
-<a href="https://www.youtube.com/embed/bWifFmhGT0s?si=SvydODJ1PvwrKaqn">Watch on youtube<a/>
+<a href="https://www.youtube.com/embed/bWifFmhGT0s?si=SvydODJ1PvwrKaqn">Watch simulation and live plotting on youtube<a/>
 
 ---
