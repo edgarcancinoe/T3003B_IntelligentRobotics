@@ -34,8 +34,6 @@ a = \frac{l}{2}
 ##### Phase Diagram for angular postion and velocity
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/phase_diagram.png" width="500">
 
-<a href="https://youtu.be/bWifFmhGT0s">Watch on youtube<a/>
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/bWifFmhGT0s?si=SvydODJ1PvwrKaqn" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<a href="https://www.youtube.com/embed/bWifFmhGT0s?si=SvydODJ1PvwrKaqn">Watch on youtube<a/>
 
 ---
