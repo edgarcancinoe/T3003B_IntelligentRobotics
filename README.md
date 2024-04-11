@@ -9,7 +9,7 @@ State-space representation of the dynamics of a pendulum system:
 ```math
 J \ddot{q} + k\, \dot{q} + mga\cos{(q)} = \tau
 ```
-Let  $x_1$ = $q$  and  $x_2 = 2$,
+Let  $x_1$ = $q$  and  $\dot{x} = x_2$,
 
 ```math
 \dot{x_1} = x_2
