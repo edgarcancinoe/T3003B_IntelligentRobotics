@@ -3,11 +3,6 @@ import rospy
 import numpy as np
 from geometry_msgs.msg import Twist
 
-def circle_motion(radius, angular_speed):
-    # Calculating linear velocities for the wheels using the formula v = ω * r
-    left_velocity = angular_speed * (radius - 0.5)  
-    right_velocity = angular_speed * (radius + 0.5)
-    return left_velocity, right_velocity
 
 if __name__ == '__main__':
     rospy.init_node('cmd_generator')
@@ -15,18 +10,28 @@ if __name__ == '__main__':
     pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
     print('cmd generator running')
     
-    radius = 1.0  # Adjust the radius of the circle as needed
-    angular_speed = 0.85  # Adjust the angular speed as needed
-    
+    radius = 2.0
+    t = 0
+    v_0 = 1.5  
+    omega_0 = 0.5 
     try:
         while not rospy.is_shutdown():
-            left_vel, right_vel = circle_motion(radius, angular_speed)
             
-            twist_msg = Twist()
-            twist_msg.linear.x = left_vel
-            twist_msg.linear.y = right_vel
+
+            v = v_0 * np.abs(np.sin(t))
+
+            omega = v / radius         
+            vel_msg = Twist()
             
-            pub.publish(twist_msg)
+            vel_msg.linear.x = v
+            vel_msg.linear.y = 0
+            vel_msg.linear.z = 0
+            vel_msg.angular.x = 0
+            vel_msg.angular.y = 0
+            vel_msg.angular.z = omega
+            
+            pub.publish(vel_msg)
             rate.sleep()
+            t = t + 1/100
     except rospy.ROSInterruptException:
         pass

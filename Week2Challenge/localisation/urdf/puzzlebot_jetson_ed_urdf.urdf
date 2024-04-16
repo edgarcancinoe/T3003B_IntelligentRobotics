@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<robot name="Puzzlebot Jetson-Lidar Ed.">
+
+
+<!-- Dummy link to fiz robot chassis -->
+  <link name="base_link">
+  </link>
+  
+    <joint name="chassis_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="chassis"/>
+        <origin xyz="0.0 0.0 0.05"/>
+    </joint>
+
+    <link name="chassis">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.01" />
+            <inertia ixx="7.58333333333e-06" ixy="0.0" ixz="0.0" iyy="7.58333333333e-06" iyz="0.0" izz="1.25e-05"/>
+        </inertial>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://localisation/models/MCR2_1000_13_Chassis.stl"/>
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="1.57079632679 0 1.57079632679" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="package://localisation/models/MCR2_1000_13_Chassis.stl"/>
+            </geometry>
+        </visual>
+    </link>
+
+
+
+<!-- FINISH THE URDF-->
+
+
+</robot>
