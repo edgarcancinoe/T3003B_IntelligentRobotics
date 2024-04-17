@@ -7,7 +7,7 @@ from geometry_msgs.msg import Vector3, Twist, Point, Pose, Quaternion
 from nav_msgs.msg import Odometry
 
 class Puzzlebot_controller():
-    def __init__(self, s_d, kp_V, kp_w, deg_tolerance = 2.0):
+    def __init__(self, s_d, kp_V, kp_w, d_tolerance=0.01, deg_tolerance = 1.5):
 
         # Class attributes
         self.kp_l = kp_V
@@ -19,7 +19,8 @@ class Puzzlebot_controller():
                              orientation= Quaternion(x=0.0, y=0.0, z=0.0, w=1.0))
 
         self.w_error_tolerance : float = (deg_tolerance*(1/360)) * (2 * np.pi) 
-
+        self.l_error_tolerance : float = d_tolerance
+        
         # Publishers
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         
@@ -45,7 +46,7 @@ class Puzzlebot_controller():
         
         if abs(e_w) > self.w_error_tolerance:
             twist_msg.angular.z = self.kp_w * e_w
-        else:
+        elif abs(e_l) > self.l_error_tolerance:
             twist_msg.linear.x = self.kp_l * e_l
 
         self.cmd_vel_publisher.publish(twist_msg)
