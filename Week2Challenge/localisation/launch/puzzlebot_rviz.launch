@@ -7,7 +7,7 @@
         <param name="robot_description" command="cat $(arg puzzlebot_sim_model)" />
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="simulated_state_publisher" output="screen"/>
-
-        <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" /> 
+        <arg name="rvizconfig" default="$(find slm_sim)/rviz/manipulator.rviz" />
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true"/> 
 
 </launch>

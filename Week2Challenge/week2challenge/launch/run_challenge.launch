@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+        <arg name="camera_name" default="/camera/color" />
+        <arg name="image_topic" default="image_raw" />
+        
+        <include file="$(find localisation)/launch/puzzlebot_rviz.launch">
+            <!-- <arg name="camera_name" value="$(arg camera_name)" />
+            <arg name="image_topic" value="$(arg image_topic)" /> -->
+        </include>
+
+        <node pkg="localisation" type="localisation.py" name="localisation"/>
+        <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model"/>
+        <!-- <node pkg="puzzlebot_sim" type="cmd_generator.py" name="cmd_generator"/> -->
+        <!-- <node pkg="puzzlebot_control" type="control.py" name="control"/> -->
+
+</launch>
