@@ -6,9 +6,11 @@ from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Quaternion
 
 class PuzzlebotKinematicModel():
-    def __init__(self, x = 0.0, y = 0.0, theta = 0.0, r = .05, l = 0.19) -> None:
+    def __init__(self, frame_id: str, x: float, y:float, theta:float, 
+                 r:float, l:float, pose_topic: str, wl_topic: str, wr_topic: str) -> None:
+        
         # Identifier
-        self.frame_id = 'world_frame'
+        self.frame_id = frame_id
 
         # Frequency
         self.prev_time = rospy.Time.now()
@@ -28,9 +30,9 @@ class PuzzlebotKinematicModel():
         self.u2w_mat = np.array([[self.r/2.0, self.r/2.0], [self.r/(2.0 * self.l), -self.r/(2.0 * self.l)]])
 
         # Publishers
-        self.pose_publisher = rospy.Publisher('/pose', PoseStamped, queue_size=10)
-        self.w_l_publisher = rospy.Publisher('/wl', Float32, queue_size=10)
-        self.w_r_publisher = rospy.Publisher('/wr', Float32, queue_size=10)
+        self.pose_publisher = rospy.Publisher(pose_topic, PoseStamped, queue_size=10)
+        self.w_l_publisher = rospy.Publisher(wl_topic, Float32, queue_size=10)
+        self.w_r_publisher = rospy.Publisher(wr_topic, Float32, queue_size=10)
 
     def _wrap_to_Pi(self, theta):
         result = np.fmod((theta + np.pi),(2 * np.pi))
@@ -97,18 +99,35 @@ class PuzzlebotKinematicModel():
         self.V = 0.0
         self.w = 0.0
 
-freq = 100
 if __name__ == '__main__':
     rospy.init_node('puzzlebot_kinematic_model')
-    loop_rate = rospy.Rate(rospy.get_param('~node_rate', freq))
 
-    model = PuzzlebotKinematicModel()
+    # Get ROS parameters
+    freq = rospy.get_param('/node_rate', 100)
+    world_frame_name = rospy.get_param('/world_frame_name', 'odom')
+    radius = rospy.get_param('/wheel_radius', 0.05)
+    track = rospy.get_param('/track_length', 0.19)
+    pose_topic = rospy.get_param('/pose_topic', 'pose')
+    wl_topic = rospy.get_param('/wl_topic', 'wl')
+    wr_topic = rospy.get_param('/wr_topic', 'wr')
+    s_0 = rospy.get_param('~starting_state', {'x': 0.0, 'y': 0.0, 'theta': 0.0})
 
+    # Initialize class
+    model = PuzzlebotKinematicModel(frame_id=world_frame_name, 
+                                    x=s_0['x'], 
+                                    y=s_0['y'], 
+                                    theta=s_0['theta'], 
+                                    r=radius, l=track,
+                                    pose_topic=pose_topic,
+                                    wl_topic=wl_topic,
+                                    wr_topic=wr_topic)
+
+    # Suscribe to commands and use model class' method
     rospy.Subscriber('cmd_vel', Twist, model.cmd_vel_callback)
 
-    print('Node running')
-
+    rospy.loginfo('Kinematic model running')
     try:
+        loop_rate = rospy.Rate(freq)
         while not rospy.is_shutdown():
             model.step()
             loop_rate.sleep()
