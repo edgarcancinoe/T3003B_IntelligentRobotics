@@ -5,18 +5,20 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 import tf2_ros
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Vector3, Quaternion, Transform
+from puzzlebot_util.util import get_global_params
 
 class Joint_State_Publisher():
-    def __init__(self, joint_states_topic='/joint_states'):
+    def __init__(self, inertial_frame_name, robot_frame_name, joint_names, joint_initial_positions, joint_states_topic):
         self.joint_state_publisher = rospy.Publisher(joint_states_topic, JointState, queue_size=10)
-        self.joint_names = ['leftWheel', 'rightWheel']
+        self.joint_names = joint_names
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.time = rospy.Time.now()
-        self.joints_positions = np.array([0.0, 0.0])
-        self.frame_id = 'odom'
-        self.robot_body_id = 'base_link'
+        self.joints_positions = np.array(joint_initial_positions)
+        self.frame_id = inertial_frame_name
+        self.robot_body_id = robot_frame_name
         self.set_odom_frame()
+        self.effort_constant = [0.0]*len(self.joint_names)
 
     def _get_dt(self):
         current_time = rospy.Time.now()
@@ -32,54 +34,27 @@ class Joint_State_Publisher():
         result[result < 0] += 2 * np.pi
         return result - np.pi
     
-    def _euler_xyz_to_quaternion(self, roll, pitch, yaw):
+    def _quaternion_from_z_rotation(self, yaw):
         """
-        Convert Euler angles (in radians) given in XYZ order to a quaternion.
-
-        Parameters:
-        - roll: Rotation around the X-axis in radians.
-        - pitch: Rotation around the Y-axis in radians.
-        - yaw: Rotation around the Z-axis in radians.
-
-        Returns:
-        - A tuple representing the quaternion (qx, qy, qz, qw).
+            Convert an euler z-axis rotation (radians) to quaternion form
         """
-        # Half angles
-        half_roll = roll / 2.0
-        half_pitch = pitch / 2.0
-        half_yaw = yaw / 2.0
-
-        # Compute sines and cosines of half angles
-        sin_r = np.sin(half_roll)
-        cos_r = np.cos(half_roll)
-        sin_p = np.sin(half_pitch)
-        cos_p = np.cos(half_pitch)
-        sin_y = np.sin(half_yaw)
-        cos_y = np.cos(half_yaw)
-
-        # Calculate the components of the quaternion
-        qw = cos_r * cos_p * cos_y + sin_r * sin_p * sin_y
-        qx = sin_r * cos_p * cos_y - cos_r * sin_p * sin_y
-        qy = cos_r * sin_p * cos_y + sin_r * cos_p * sin_y
-        qz = cos_r * cos_p * sin_y - sin_r * sin_p * cos_y
-
-        return (qx, qy, qz, qw)
+        w = np.cos(yaw / 2)
+        z = np.sin(yaw / 2)
+        
+        return (0, 0, z, w)
     
     def set_odom_frame(self):
-        odom_transform = TransformStamped()
-        odom_transform.header.stamp = rospy.Time.now()
-        odom_transform.header.frame_id = self.frame_id
-        odom_transform.child_frame_id = self.robot_body_id
-        odom_transform.transform.translation.x = 0.0
-        odom_transform.transform.translation.y = 0.0
-        odom_transform.transform.translation.z = 0.0
-
-        wx, wy, wz, ww = self._euler_xyz_to_quaternion(0,0,0)
-        odom_transform.transform.rotation.x = wx
-        odom_transform.transform.rotation.y = wy
-        odom_transform.transform.rotation.z = wz
-        odom_transform.transform.rotation.w = ww
+        odom_transform = TransformStamped(
+            header=Header(stamp=rospy.Time.now(), frame_id=self.frame_id),
+            child_frame_id=self.robot_body_id,
+            transform=Transform(
+                translation=Vector3(0.0, 0.0, 0.0),
+                rotation=Quaternion(0, 0, 0, 1) 
+            )
+        )
+        # Broadcast the static transform
         self.tf_broadcaster.sendTransform(odom_transform)
+
 
     def odom_callback(self, msg):
         # The odometry message contains:
@@ -106,37 +81,48 @@ class Joint_State_Publisher():
                                                       position=self.joints_positions, 
                                                       velocity=joints_velocities, 
                                                       name=self.joint_names, 
-                                                      effort=[0.0]*len(self.joint_names)))
+                                                      effort=self.effort_constant))
         
     
     def broadcast_robot_transform(self, position, orientation):
-        robot_transform = TransformStamped()
-        robot_transform.header.stamp = rospy.Time.now()
-        robot_transform.header.frame_id = self.frame_id
-        robot_transform.child_frame_id = self.robot_body_id
-        robot_transform.transform.translation.x = position.x
-        robot_transform.transform.translation.y = position.y 
-        robot_transform.transform.translation.z = position.z
-        wx, wy, wz, ww = self._euler_xyz_to_quaternion(0,0,orientation)
-        robot_transform.transform.rotation.x = wx
-        robot_transform.transform.rotation.y = wy
-        robot_transform.transform.rotation.z = wz
-        robot_transform.transform.rotation.w = ww
+        # Prepare the transformation object with all required fields
+        robot_transform = TransformStamped(
+            header=Header(stamp=rospy.Time.now(), frame_id=self.frame_id),
+            child_frame_id=self.robot_body_id,
+            transform=Transform(
+                translation=Vector3(x=position.x, y=position.y, z=position.z),
+                rotation=Quaternion(*self._quaternion_from_z_rotation(orientation))
+            )
+        )
+        # Broadcast the transformation
         self.tf_broadcaster.sendTransform(robot_transform)
-    
+
     def step(self):
         return
 
-freq = 100
 if __name__ == '__main__':
     rospy.init_node('joint_state_pub')
-    rate = rospy.Rate(rospy.get_param('~node_rate', freq))
-    joint_state_publisher = Joint_State_Publisher()
-    rospy.Subscriber('odom', Odometry, joint_state_publisher.odom_callback)
-    rospy.loginfo('Joint State  node running')
+
+    # Get Global ROS parameters
+    params = get_global_params()
+    # Get Local ROS parameters
+    joint_names = rospy.get_param('~joint_names', ['leftWheel', 'rightWheel'])
+    joint_initial_positions = rospy.get_param('~joint_initial_positions', [0.0, 0.0])
+    joint_states_topic = rospy.get_param('~joint_states', '/joint_states')
+
+    joint_state_publisher = Joint_State_Publisher(inertial_frame_name=params['inertial_frame_name'], robot_frame_name=params['robot_frame_name'],
+                                                  joint_names=joint_names, 
+                                                  joint_initial_positions=joint_initial_positions, 
+                                                  joint_states_topic=joint_states_topic)
+
+    rospy.Subscriber(params['odometry_topic'], Odometry, joint_state_publisher.odom_callback)
+
+    loop_rate = rospy.Rate(params['freq'])
+    rospy.loginfo('Joint State node running')
     try:
         while not rospy.is_shutdown():
             joint_state_publisher.step()
+            loop_rate.sleep()
 
     except rospy.ROSInterruptException:
         pass

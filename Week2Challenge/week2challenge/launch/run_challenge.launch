@@ -6,9 +6,9 @@
         <!-- Load config file for nodes parameter configuration -->
         <rosparam file="$(find week2challenge)/config/config.yaml" command="load" />
 
-        <node pkg="localisation" type="localisation.py" name="localisation"/>
+        <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
-        <!-- <node pkg="puzzlebot_sim" type="cmd_generator.py" name="cmd_generator"/> -->
-        <node pkg="puzzlebot_control" type="control.py" name="control"/>
+        <!-- <node pkg="puzzlebot_sim" type="cmd_generator.py" name="cmd_generator" output="screen"/> -->
+        <node pkg="puzzlebot_control" type="control.py" name="control" output="screen"/>
 
 </launch>

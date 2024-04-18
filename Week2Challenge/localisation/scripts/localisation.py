@@ -5,28 +5,34 @@ from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Vector3, Point, Quaternion, Pose, Twist, PoseWithCovariance, TwistWithCovariance
 from nav_msgs.msg import Odometry
 import numpy as np
+from puzzlebot_util.util import get_global_params
 
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
-
 class Locater():
-    def __init__(self):
-        self.odom_publisher = rospy.Publisher('/odom', Odometry, queue_size=10)
+    def __init__(self, odometry_topic, inertial_frame_name, robot_frame_name, 
+                 wheel_radius, track_length, starting_state):
+        
+        self.odom_publisher = rospy.Publisher('/' + odometry_topic, Odometry, queue_size=10)
         self.prev_time = rospy.Time.now()
-        self.frame_id = 'odom'
-        self.child_frame_id = 'base_link'
+        
+        self.frame_id = inertial_frame_name
+        self.child_frame_id = robot_frame_name
+        
         # Robot parameters
-        self.r = .05
-        self.l = 0.19
+        self.r = wheel_radius
+        self.l = track_length
 
-        # State variables at initial state
+        # Initial state variables at inertial state
+        self.sx = starting_state['x']
+        self.sy = starting_state['y']
+        self.stheta = starting_state['theta']
+
+        # Velocities (robot frame)
         self.v = 0.0
         self.w = 0.0
         self.wr = 0.0
         self.wl = 0.0
-        self.sx = 0.0
-        self.sy = 0.0
-        self.stheta = 0.0
-
+        
         self.decodematrix = np.array([[self.r / 2.0, self.r / 2.0], 
                                       [self.r / (2*self.l), - self.r / (2*self.l)]])
     
@@ -89,24 +95,32 @@ class Locater():
         self.stheta += delta[2]
 
         self._publishOdom()
-        self.v = 0.0
-        self.w = 0.0
+        # self.v = 0.0
+        # self.w = 0.0
 
-freq = 100
-slop = 0.1
 if __name__ == '__main__':
     rospy.init_node('localisation')
-    loop_rate = rospy.Rate(rospy.get_param('~node_rate', freq))
 
-    locater = Locater()
 
-    wlsub = message_filters.Subscriber('wl', Float32)
-    wrsub = message_filters.Subscriber('wr', Float32)
+    # Get Global ROS parameters
+    params = get_global_params()
+    # Local
+    slop = 0.1 # How many seconds two messages must be apart to be considered simultaneous
+
+    locater = Locater(odometry_topic=params['odometry_topic'], inertial_frame_name=params['inertial_frame_name'],
+                      robot_frame_name=params['robot_frame_name'], wheel_radius=params['wheel_radius'],
+                      track_length=params['track_length'], starting_state=params['starting_state'])
+
+
+    wlsub = message_filters.Subscriber(params['wl_topic'], Float32)
+    wrsub = message_filters.Subscriber(params['wr_topic'], Float32)
 
     # Synchronizer
     ts = message_filters.ApproximateTimeSynchronizer([wlsub, wrsub], queue_size=10, slop=slop, allow_headerless=True)
     ts.registerCallback(locater.w_callback)
 
+    loop_rate = rospy.Rate(params['freq'])
+    rospy.loginfo('Localisation node running')
     try:
         while not rospy.is_shutdown():
             locater.step()

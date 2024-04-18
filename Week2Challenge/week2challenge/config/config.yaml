@@ -1,16 +1,34 @@
 node_rate: 100
 wheel_radius: 0.05
 track_length: 0.19
-world_frame_name: 'odom'
+inertial_frame_name: 'odom'
+robot_frame_name: 'base_link'
 commands_topic: 'cmd_vel'
 pose_topic: 'pose'
 wl_topic: 'wl'
 wr_topic: 'wr'
+odometry_topic: 'odom'
+starting_state:
+  'x': 0.0
+  'y': 0.0
+  'theta': 0.0
 
-puzzlebot_kinematic_model:
-  starting_state:
-    'x': 0.0
-    'y': 0.0
-    'theta': 0.0
-  
-  
+joint_state_pub:
+  joint_states_topic: '/joint_states'
+  joint_names: ['leftWheel', 'rightWheel']
+  joint_initial_positions: [0.0, 0.0]
+
+control:
+  # Proportional controller
+  kp_V: 0.45
+  kp_w: 0.3
+  # Integral controller
+  ki_V: 0.0
+  ki_w: 0.0
+  # Derivative controller
+  kd_V: 0.0
+  kd_w: 0.0
+
+  # Tolerances
+  d_tolerance: 0.0025
+  deg_tolerance: 0.25

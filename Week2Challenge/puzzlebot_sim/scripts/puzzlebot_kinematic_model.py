@@ -18,11 +18,11 @@ class PuzzlebotKinematicModel():
 
     """
 
-    def __init__(self, frame_id: str, x: float, y:float, theta:float, 
+    def __init__(self, inertial_frame: str, x: float, y:float, theta:float, 
                  r:float, l:float, pose_topic: str, wl_topic: str, wr_topic: str) -> None:
         
         # Identifier
-        self.frame_id = frame_id
+        self.frame_id = inertial_frame
 
         # Frequency
         self.prev_time = rospy.Time.now()
@@ -119,26 +119,24 @@ if __name__ == '__main__':
     # Get ROS parameters
 
     # Global
-    params = get_global_params
-    # Local
-    s_0 = rospy.get_param('~starting_state', {'x': 0.0, 'y': 0.0, 'theta': 0.0})
+    params = get_global_params()
 
     # Initialize class
-    model = PuzzlebotKinematicModel(frame_id=params['world_frame_name'], 
-                                    x=s_0['x'], 
-                                    y=s_0['y'], 
-                                    theta=s_0['theta'], 
-                                    r=params['radius'], l=params['track'],
+    model = PuzzlebotKinematicModel(inertial_frame=params['inertial_frame_name'], 
+                                    x=params['starting_state']['x'], 
+                                    y=params['starting_state']['y'], 
+                                    theta=params['starting_state']['theta'], 
+                                    r=params['wheel_radius'], l=params['track_length'],
                                     pose_topic=params['pose_topic'],
                                     wl_topic=params['wl_topic'],
                                     wr_topic=params['wr_topic'])
 
     # Susbcribe to commands and use model class' method
     rospy.Subscriber(params['commands_topic'], Twist, model.cmd_vel_callback)
-
-    rospy.loginfo('Kinematic model running')
+    
+    loop_rate = rospy.Rate(params['freq'])
+    rospy.loginfo('Kinematic model node running')
     try:
-        loop_rate = rospy.Rate(freq)
         while not rospy.is_shutdown():
             model.step()
             loop_rate.sleep()
