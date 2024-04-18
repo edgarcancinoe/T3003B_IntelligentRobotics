@@ -10,16 +10,15 @@ if __name__ == '__main__':
     pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
     print('cmd generator running')
     
-    radius = 2.0
+    radius = .6
     t = 0
-    v_0 = 1.5  
-    omega_0 = 0.5 
+    v_0 = 0.5 
     try:
         while not rospy.is_shutdown():
             
 
             v = v_0 * np.abs(np.sin(t))
-
+            v = v_0
             omega = v / radius         
             vel_msg = Twist()
             

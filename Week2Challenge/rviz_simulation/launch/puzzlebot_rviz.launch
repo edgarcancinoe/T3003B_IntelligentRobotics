@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+
+        <!-- ARGUMENTS -->
+
+        <!-- Define the RViz configuration file path -->
+        <arg name="rvizconfig" default="$(find rviz_simulation)/config/my_rviz_config.rviz"/>
+        <!-- Define the URDF model file path -->
+        <arg name="puzzlebot_sim_model" default="$(find rviz_simulation)/urdf/puzzlebot_jetson_ed_urdf.urdf"/>
+        
+
+        <!-- PARAMETERS -->
+
+        <param name="robot_description" command="cat $(arg puzzlebot_sim_model)" />
+
+        <!-- NODES -->
+        <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
+
+        <!-- Static Transform Publications -->
+        <node   pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="map_joint"
+                args="odomPose_x  odomPose_y  odomPose_z  odomPose_roll  odomPose_pitch  odomPose_yaw   map   odom"/>
+
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="simulated_state_publisher" output="screen"/>
+        <!-- <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"></node>        Start RViz with the specified configuration file -->
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true"/> 
+
+</launch>

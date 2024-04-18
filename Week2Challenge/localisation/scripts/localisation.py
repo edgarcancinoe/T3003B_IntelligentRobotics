@@ -12,8 +12,8 @@ class Locater():
     def __init__(self):
         self.odom_publisher = rospy.Publisher('/odom', Odometry, queue_size=10)
         self.prev_time = rospy.Time.now()
-        self.frame_id = 'world_frame'
-
+        self.frame_id = 'odom'
+        self.child_frame_id = 'base_link'
         # Robot parameters
         self.r = .05
         self.l = 0.19
@@ -57,7 +57,7 @@ class Locater():
     def _publishOdom(self):
         self.odom_publisher.publish(Odometry(
             header = Header(frame_id = self.frame_id, stamp = rospy.Time.now()),
-            child_frame_id = 'puzzlebot',
+            child_frame_id = self.child_frame_id,
             # Pose in inertial frame (world_frame)
             pose = PoseWithCovariance(
                 pose = Pose(
