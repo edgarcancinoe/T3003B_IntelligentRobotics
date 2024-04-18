@@ -2,6 +2,7 @@ node_rate: 100
 wheel_radius: 0.05
 track_length: 0.19
 world_frame_name: 'odom'
+commands_topic: 'cmd_vel'
 pose_topic: 'pose'
 wl_topic: 'wl'
 wr_topic: 'wr'
@@ -11,4 +12,5 @@ puzzlebot_kinematic_model:
     'x': 0.0
     'y': 0.0
     'theta': 0.0
+  
   

@@ -87,7 +87,6 @@ class PuzzlebotKinematicModel():
         # We capture the system's current state s = [x y theta]
         curr_s = np.array([self.s.position.x, self.s.position.y, self.s.orientation.z])
         
-        
         curr_s = curr_s + self._rk_integration(dt, curr_s, wr, wl)
         
         # Update state
@@ -110,6 +109,7 @@ if __name__ == '__main__':
     world_frame_name = rospy.get_param('/world_frame_name', 'odom')
     radius = rospy.get_param('/wheel_radius', 0.05)
     track = rospy.get_param('/track_length', 0.19)
+    commands_topic = rospy.get_param('/commands_topic', 'cmd_vel')
     pose_topic = rospy.get_param('/pose_topic', 'pose')
     wl_topic = rospy.get_param('/wl_topic', 'wl')
     wr_topic = rospy.get_param('/wr_topic', 'wr')
@@ -125,8 +125,8 @@ if __name__ == '__main__':
                                     wl_topic=wl_topic,
                                     wr_topic=wr_topic)
 
-    # Suscribe to commands and use model class' method
-    rospy.Subscriber('cmd_vel', Twist, model.cmd_vel_callback)
+    # Susbcribe to commands and use model class' method
+    rospy.Subscriber(commands_topic, Twist, model.cmd_vel_callback)
 
     rospy.loginfo('Kinematic model running')
     try:
