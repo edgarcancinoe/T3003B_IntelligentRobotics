@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./Week2Challenge/week2challenge/src"
+    ]
+}

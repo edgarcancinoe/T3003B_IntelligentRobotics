@@ -4,6 +4,7 @@ import rospy
 import numpy as np
 from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Quaternion
+from puzzlebot_util.util import get_global_params
 
 class PuzzlebotKinematicModel():
     """
@@ -116,28 +117,24 @@ if __name__ == '__main__':
     rospy.init_node('puzzlebot_kinematic_model')
 
     # Get ROS parameters
-    freq = rospy.get_param('/node_rate', 100)
-    world_frame_name = rospy.get_param('/world_frame_name', 'odom')
-    radius = rospy.get_param('/wheel_radius', 0.05)
-    track = rospy.get_param('/track_length', 0.19)
-    commands_topic = rospy.get_param('/commands_topic', 'cmd_vel')
-    pose_topic = rospy.get_param('/pose_topic', 'pose')
-    wl_topic = rospy.get_param('/wl_topic', 'wl')
-    wr_topic = rospy.get_param('/wr_topic', 'wr')
+
+    # Global
+    params = get_global_params
+    # Local
     s_0 = rospy.get_param('~starting_state', {'x': 0.0, 'y': 0.0, 'theta': 0.0})
 
     # Initialize class
-    model = PuzzlebotKinematicModel(frame_id=world_frame_name, 
+    model = PuzzlebotKinematicModel(frame_id=params['world_frame_name'], 
                                     x=s_0['x'], 
                                     y=s_0['y'], 
                                     theta=s_0['theta'], 
-                                    r=radius, l=track,
-                                    pose_topic=pose_topic,
-                                    wl_topic=wl_topic,
-                                    wr_topic=wr_topic)
+                                    r=params['radius'], l=params['track'],
+                                    pose_topic=params['pose_topic'],
+                                    wl_topic=params['wl_topic'],
+                                    wr_topic=params['wr_topic'])
 
     # Susbcribe to commands and use model class' method
-    rospy.Subscriber(commands_topic, Twist, model.cmd_vel_callback)
+    rospy.Subscriber(params['commands_topic'], Twist, model.cmd_vel_callback)
 
     rospy.loginfo('Kinematic model running')
     try:
