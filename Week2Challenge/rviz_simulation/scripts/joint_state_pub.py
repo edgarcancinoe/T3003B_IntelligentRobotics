@@ -30,7 +30,9 @@ class Joint_State_Publisher():
         return wdot * dt
     
     def _wrap_to_Pi(self, theta):
+        return theta
         result = np.fmod(theta + np.pi, 2 * np.pi)
+        return result
         result[result < 0] += 2 * np.pi
         return result - np.pi
     

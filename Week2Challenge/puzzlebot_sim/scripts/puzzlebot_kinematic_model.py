@@ -47,7 +47,9 @@ class PuzzlebotKinematicModel():
         self.w_r_publisher = rospy.Publisher(wr_topic, Float32, queue_size=10)
 
     def _wrap_to_Pi(self, theta):
+        return theta
         result = np.fmod((theta + np.pi),(2 * np.pi))
+        return result
         if(result < 0):
             result += 2 * np.pi
         return result - np.pi

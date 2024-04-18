@@ -16,10 +16,10 @@
         <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
 
         <!-- Static Transform Publications -->
-        <node   pkg="tf2_ros" 
+        <!-- <node   pkg="tf2_ros" 
                 type="static_transform_publisher" 
                 name="map_joint"
-                args="odomPose_x  odomPose_y  odomPose_z  odomPose_roll  odomPose_pitch  odomPose_yaw   map   odom"/>
+                args="odomPose_x  odomPose_y  odomPose_z  odomPose_roll  odomPose_pitch  odomPose_yaw   map   odom"/> -->
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="simulated_state_publisher" output="screen"/>
 
