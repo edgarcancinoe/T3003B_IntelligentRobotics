@@ -46,12 +46,10 @@ class Locater():
         return np.array([dd * np.cos(theta), dd * np.sin(theta), dtheta])
     
     def _rk4_delta(self, dt, theta, dd, dtheta):
-
         k1 = self._system_gradient(theta, dd, dtheta)
         k2 = self._system_gradient(theta + dt*k1[2]/2.0, dd, dtheta)
         k3 = self._system_gradient(theta + dt*k2[2]/2.0, dd, dtheta)
         k4 = self._system_gradient(theta + dt*k3[2], dd, dtheta)
-
         return dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
     
     def _publishOdom(self):
@@ -82,7 +80,6 @@ class Locater():
         self.wr = wr.data
 
     def step(self):
-
         dt = self._get_dt()
 
         delta = self._rk4_delta(dt, self.stheta, self.v, self.w)

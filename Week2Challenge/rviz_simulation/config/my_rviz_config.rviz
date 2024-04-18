@@ -66,9 +66,7 @@ Visualization Manager:
         camera_link:
           Value: false
         chassis:
-          Value: true
-        map:
-          Value: true
+          Value: false
         odom:
           Value: true
         wl_link:
@@ -82,17 +80,15 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        base_link:
-          chassis:
-            camera_link:
-              {}
-            wl_link:
-              {}
-            wr_link:
-              {}
-        map:
-          odom:
-            {}
+        odom:
+          base_link:
+            chassis:
+              camera_link:
+                {}
+              wl_link:
+                {}
+              wr_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -139,7 +135,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: base_link
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -163,7 +159,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.7459592819213867
+      Distance: 2.9078457355499268
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -171,17 +167,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.11607197672128677
-        Y: 0.6484965682029724
-        Z: -0.2332470715045929
+        X: -0.23665159940719604
+        Y: 0.33592140674591064
+        Z: -0.22841760516166687
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4603990912437439
+      Pitch: 0.31039947271347046
       Target Frame: <Fixed Frame>
-      Yaw: 5.9735894203186035
+      Yaw: 0.3804159164428711
     Saved: ~
 Window Geometry:
   Displays:

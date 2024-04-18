@@ -16,6 +16,7 @@ class Joint_State_Publisher():
         self.joints_positions = np.array([0.0, 0.0])
         self.frame_id = 'odom'
         self.robot_body_id = 'base_link'
+        self.set_odom_frame()
 
     def _get_dt(self):
         current_time = rospy.Time.now()
@@ -63,6 +64,22 @@ class Joint_State_Publisher():
         qz = cos_r * cos_p * sin_y - sin_r * sin_p * cos_y
 
         return (qx, qy, qz, qw)
+    
+    def set_odom_frame(self):
+        odom_transform = TransformStamped()
+        odom_transform.header.stamp = rospy.Time.now()
+        odom_transform.header.frame_id = self.frame_id
+        odom_transform.child_frame_id = self.robot_body_id
+        odom_transform.transform.translation.x = 0.0
+        odom_transform.transform.translation.y = 0.0
+        odom_transform.transform.translation.z = 0.0
+
+        wx, wy, wz, ww = self._euler_xyz_to_quaternion(0,0,0)
+        odom_transform.transform.rotation.x = wx
+        odom_transform.transform.rotation.y = wy
+        odom_transform.transform.rotation.z = wz
+        odom_transform.transform.rotation.w = ww
+        self.tf_broadcaster.sendTransform(odom_transform)
 
     def odom_callback(self, msg):
         # The odometry message contains:
@@ -93,11 +110,10 @@ class Joint_State_Publisher():
         
     
     def broadcast_robot_transform(self, position, orientation):
-
         robot_transform = TransformStamped()
         robot_transform.header.stamp = rospy.Time.now()
-        robot_transform.header.frame_id = 'base_link'
-        robot_transform.child_frame_id = 'chassis'
+        robot_transform.header.frame_id = self.frame_id
+        robot_transform.child_frame_id = self.robot_body_id
         robot_transform.transform.translation.x = position.x
         robot_transform.transform.translation.y = position.y 
         robot_transform.transform.translation.z = position.z

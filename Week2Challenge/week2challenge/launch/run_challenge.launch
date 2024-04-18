@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-
-
         <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include>
 
         <node pkg="localisation" type="localisation.py" name="localisation"/>
