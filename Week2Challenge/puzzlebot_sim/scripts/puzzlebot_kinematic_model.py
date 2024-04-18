@@ -27,7 +27,7 @@ class PuzzlebotKinematicModel():
         self.w = 0.0
         
         # Control to wheel velocities matrix
-        self.u2w_mat = np.array([[self.r/2.0, self.r/2.0], [self.r/(2.0 * self.l), -self.r/(2.0 * self.l)]])
+        self.u2w_mat_inv = np.linalg.inv(np.array([[self.r/2.0, self.r/2.0], [self.r/(2.0 * self.l), -self.r/(2.0 * self.l)]]))
 
         # Publishers
         self.pose_publisher = rospy.Publisher(pose_topic, PoseStamped, queue_size=10)
@@ -68,24 +68,27 @@ class PuzzlebotKinematicModel():
         self.V = msg.linear.x
         self.w = msg.angular.z
     
+    def _rk_integration(self, dt, state, wr, wl):
+        # Compute RK4 updates
+        k1 = self._state_gradient(state[2], wr, wl)
+        k2 = self._state_gradient(state[2] + dt*k1[2]/2.0, wr, wl)
+        k3 = self._state_gradient(state[2] + dt*k2[2]/2.0, wr, wl)
+        k4 = self._state_gradient(state[2] + dt*k3[2], wr, wl)
+
+        # Update position and orientation using RK4
+        return dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
+        
     def step(self):
         # Compute dt based on elapsed time
         dt = self._get_dt()
 
-        wr, wl = np.dot(np.linalg.inv(self.u2w_mat), np.array([self.V, self.w]))
+        wr, wl = np.dot(self.u2w_mat_inv, np.array([self.V, self.w]))
 
         # We capture the system's current state s = [x y theta]
         curr_s = np.array([self.s.position.x, self.s.position.y, self.s.orientation.z])
         
-        # Compute RK4 updates
-        k1 = self._state_gradient(curr_s[2], wr, wl)
-        k2 = self._state_gradient(curr_s[2] + dt*k1[2]/2.0, wr, wl)
-        k3 = self._state_gradient(curr_s[2] + dt*k2[2]/2.0, wr, wl)
-        k4 = self._state_gradient(curr_s[2] + dt*k3[2], wr, wl)
-
-        # Update position and orientation using RK4
-        delta_pose = dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
-        curr_s = curr_s + delta_pose
+        
+        curr_s = curr_s + self._rk_integration(dt, curr_s, wr, wl)
         
         # Update state
         self.s = Pose(position = Point(x = curr_s[0], y = curr_s[1], z = 0.0), orientation = Quaternion(x = 0.0, y = 0.0, z = self._wrap_to_Pi(curr_s[2]), w = 1.0))
