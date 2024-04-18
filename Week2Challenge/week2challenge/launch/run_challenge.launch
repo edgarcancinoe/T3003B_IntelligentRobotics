@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-        <!-- Load config file for parameter configuration -->
-        <rosparam file="$(find week2challenge)/config/config.yaml" command="load" />
-
+        <!-- Launch simulation environment -->
         <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include>
+
+        <!-- Load config file for nodes parameter configuration -->
+        <rosparam file="$(find week2challenge)/config/config.yaml" command="load" />
 
         <node pkg="localisation" type="localisation.py" name="localisation"/>
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>

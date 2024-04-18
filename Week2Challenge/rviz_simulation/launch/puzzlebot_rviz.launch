@@ -10,7 +10,6 @@
         
 
         <!-- PARAMETERS -->
-
         <param name="robot_description" command="cat $(arg puzzlebot_sim_model)" />
 
         <!-- NODES -->

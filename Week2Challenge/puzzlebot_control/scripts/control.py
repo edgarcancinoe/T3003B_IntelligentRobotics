@@ -7,7 +7,7 @@ from geometry_msgs.msg import Vector3, Twist, Point, Pose, Quaternion
 from nav_msgs.msg import Odometry
 
 class Puzzlebot_controller():
-    def __init__(self, s_d, kp_V, kp_w, d_tolerance=0.01, deg_tolerance = .25):
+    def __init__(self, s_d, kp_V, kp_w, d_tolerance=0.0025, deg_tolerance = .25):
 
         # Class attributes
         self.kp_l = kp_V

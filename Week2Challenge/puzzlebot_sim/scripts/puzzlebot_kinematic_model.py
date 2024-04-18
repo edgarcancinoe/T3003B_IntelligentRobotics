@@ -6,6 +6,17 @@ from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Quaternion
 
 class PuzzlebotKinematicModel():
+    """
+        This class listens to a command topic receiving [V w] instructions to move the 
+        differential robot at a velocity V and angular velocity w in the robot frame.
+
+
+        The necessary angular speeds for left and right wheels are computed in accordance
+        with the kinematic model, and the new robot pose (numerically integrated using the RK4 method)
+        and instantaneous wheel angular speeds are outputed to the corresponding topics.
+
+    """
+
     def __init__(self, frame_id: str, x: float, y:float, theta:float, 
                  r:float, l:float, pose_topic: str, wl_topic: str, wr_topic: str) -> None:
         
