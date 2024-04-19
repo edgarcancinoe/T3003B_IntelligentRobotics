@@ -43,8 +43,8 @@ class Puzzlebot_controller():
         
         # Publishers
         self.cmd_vel_publisher = rospy.Publisher('/' + commands_topic, Twist, queue_size=10)
-        # self.error_publisher = rospy.Publisher('/errors', Twist, queue_size=10)
-        # self.ref_publisher = rospy.Publisher('/ref', Twist, queue_size=10)
+        self.error_publisher = rospy.Publisher('/errors', Twist, queue_size=10)
+        self.ref_publisher = rospy.Publisher('/ref', Twist, queue_size=10)
 
         # Time
         self.time = rospy.Time.now()
@@ -92,10 +92,10 @@ class Puzzlebot_controller():
         if np.abs(e_w) < self.w_tolerance:
             e_w = 0.0
 
-        # ref = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
-        #             angular = Vector3(x = 0.0, y = 0.0, z = w_d))
+        ref = Twist( linear = Vector3(x = self.s_d.x, y = self.s_d.y, z = 0.0),
+                    angular = Vector3(x = 0.0, y = 0.0, z = w_d))
         
-        # self.ref_publisher.publish(ref)
+        self.ref_publisher.publish(ref)
         return e_l, e_w
     
     def compute_output(self):
@@ -111,8 +111,8 @@ class Puzzlebot_controller():
         # Derivative error
         e_dot_l, e_dot_w = self._get_e_dot(e_l, e_w)
 
-        # errors = Twist( linear = Vector3(x = e_l, y = self.ei_l, z = e_dot_l),
-        #                     angular = Vector3(x = e_w, y = self.ei_w, z = e_dot_w))
+        errors = Twist( linear = Vector3(x = e_l, y = self.ei_l, z = e_dot_l),
+                            angular = Vector3(x = e_w, y = self.ei_w, z = e_dot_w))
         
         twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
                             angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
@@ -126,7 +126,7 @@ class Puzzlebot_controller():
         else: # Reached Goal
             reached = True
         self.cmd_vel_publisher.publish(twist_msg)
-        # self.error_publisher.publish(errors)
+        self.error_publisher.publish(errors)
 
         return reached
 
