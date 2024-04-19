@@ -18,13 +18,13 @@ Where $v$ and $w$ are linear and angular velocities in robot frame, whilst $x$, 
 The relationship between a given linear and angular velocity control input $u = [v\;\omega]$ and the robot wheels' speeds is:
 
 ```math
-     \begin{bmatrix} V \\ \omega \\ \end{bmatrix} = \begin{pmatrix}
-& a & b & \cdots & c\\
-& a & b & \cdots & c\\
-&\vdots & \vdots & \vdots & \vdots\\
-& a & b & \cdots & c\\
-\end{pmatrix}
+     \begin{bmatrix} V \\ \omega \\ \end{bmatrix} = \begin{bmatrix}
+& \frac{r}{2} & \frac{r}{2} \\
+& \frac{r}{l} & -\frac{r}{l} \\
+\end{bmatrix} \begin{bmatrix} \omega_r \\ \omega_l \\ \end{bmatrix}
 ```
+Where $r$ is the wheel radius and $l$ is the robot's track length.
+
 $
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
