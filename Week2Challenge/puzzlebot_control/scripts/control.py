@@ -159,10 +159,16 @@ if __name__=='__main__':
 
     # List of goals to reach
     goals = [
-             Point(x = 1.0, y = 0.0, z = 0.0),
-             Point(x = 1.0, y = 1.0, z = 0.0),
-             Point(x = 0.0, y = 1.0, z = 0.0),
-             Point(x = 0.0, y = 0.0, z = 0.0)]
+            Point(x = 0.385, y = 0.00, z = 0.00),
+            Point(x = 0.192, y = 0.333, z = 0.00),
+            Point(x = -0.192, y = 0.333, z = 0.00),
+            Point(x = -0.385, y = 0.00, z = 0.00),
+            Point(x = -0.192, y = -0.333, z = 0.00),
+            Point(x = 0.192, y = -0.333, z = 0.00)
+            ]
+
+
+
 
     # List index
     current_goal = 0
