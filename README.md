@@ -34,8 +34,7 @@ Where $r$ is the wheel radius and $l$ is the robot's track length.
 
 Robot model diagram VS Time             |  TF 
 :-------------------------:|:-------------------------:
-<img <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/robot_model.png" width="350">
- | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/tf_tree.png" width="500">
+<img <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/robot_model.png" width="350"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/tf_tree.png" width="500">
 
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
