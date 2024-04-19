@@ -19,8 +19,8 @@ The relationship between a given linear and angular velocity control input $u = 
 
 ```math
      \begin{bmatrix} V \\ \omega \\ \end{bmatrix} = \begin{bmatrix}
-& \frac{r}{2} & \frac{r}{2} \\
-& \frac{r}{l} & -\frac{r}{l} \\
+\frac{r}{2} & \frac{r}{2} \\
+\frac{r}{l} & -\frac{r}{l} \\
 \end{bmatrix} \begin{bmatrix} \omega_r \\ \omega_l \\ \end{bmatrix}
 ```
 Where $r$ is the wheel radius and $l$ is the robot's track length.
