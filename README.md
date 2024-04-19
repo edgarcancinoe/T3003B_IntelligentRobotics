@@ -13,7 +13,8 @@ Kinematic model of the PuzzleBot differential robot:
 ```math
 \dot{\theta} = \omega
 ```
-Where 
+Where $v$ and $w$ are linear and angular velocities in robot frame, whilst $x$, $y$, and $\theta$ are the state variables describing the pose in the inertial frame.
+
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
 ---
