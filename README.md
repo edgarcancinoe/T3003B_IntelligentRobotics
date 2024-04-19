@@ -9,7 +9,7 @@ Control, odometry, and simulation in RViz of the Puzzlebot movement while follow
 - Odometry by Dead Reckoning using RK4 numeric integration.
 - Implementation of the linear controller (PID) to control the robot's linear and angular velocity in the robot frame.
 
-##### Robot model
+#### Robot model
 Kinematic model of the PuzzleBot differential robot:
 ```math
 \dot{x} = v \cos{\theta}
@@ -33,7 +33,7 @@ The relationship between a given linear and angular velocity control input and t
 Where $r$ is the wheel radius and $l$ is the robot's track length.
 
 
-##### ROS Nodes diagram
+#### ROS Nodes diagram
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/rosgraph.png" width="1000">
 
 #####
