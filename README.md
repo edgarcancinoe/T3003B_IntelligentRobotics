@@ -3,6 +3,12 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
 ### Week 2: Challenge
+Control, odometry, and simulation in RViz of the Puzzlebot movement while following a waypoint-defined trajectory, based on the robot's kinematic state representation.
+
+- Simulation of the robot's dynamics under its kinematic model.
+- Odometry by Dead Reckoning using RK4 numeric integration.
+- Implementation of the linear controller (PID) to control the robot's linear and angular velocity in the robot frame.
+
 ##### Robot model
 Kinematic model of the PuzzleBot differential robot:
 ```math
@@ -30,7 +36,7 @@ Where $r$ is the wheel radius and $l$ is the robot's track length.
 ##### ROS Nodes diagram
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/rosgraph.png" width="1000">
 
-##### tree
+#####
 
 Robot model diagram VS Time             |  TF tree
 :-------------------------:|:-------------------------:
