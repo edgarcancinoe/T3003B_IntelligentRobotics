@@ -1,8 +1,8 @@
 # T3003B_IntelligentRobotics
 Class T3003B: Integration of Robotics and Intelligent Systems
 
-### Week 2: Challenge
 ---
+### Week 2: Challenge
 
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
