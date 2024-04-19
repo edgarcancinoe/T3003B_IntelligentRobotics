@@ -27,7 +27,7 @@ Where $r$ is the wheel radius and $l$ is the robot's track length.
 
 TF Tree            
 :-------------------------:
-<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/rosgraph.png" width="500">
+<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/rosgraph.png" width="1000">
 
 
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
