@@ -10,7 +10,7 @@ Kinematic model of the PuzzleBot differential robot:
 ```math
 \dot{y} = v \sin{\theta}
 ```
-``math
+```math
 \theta = \omega
 ```
 Where 
