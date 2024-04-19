@@ -15,20 +15,21 @@ Kinematic model of the PuzzleBot differential robot:
 ```
 Where $v$ and $w$ are linear and angular velocities in robot frame, whilst $x$, $y$, and $\theta$ are the state variables describing the pose in the 2D inertial frame.
 
-The relationship between a given linear and angular velocity control input $u = [v  \omega]$ and the robot wheels' speeds is:
+The relationship between a given linear and angular velocity control input and the robot wheels' speeds is:
 
 ```math
-     \begin{bmatrix} V \\ \omega \\ \end{bmatrix} = \begin{bmatrix}
+     u = \begin{bmatrix} V \\ \omega \\ \end{bmatrix} = \begin{bmatrix}
 \frac{r}{2} & \frac{r}{2} \\
 \frac{r}{l} & -\frac{r}{l}
 \end{bmatrix} \begin{bmatrix} \omega_r \\ \omega_l \\ \end{bmatrix}
 ```
 Where $r$ is the wheel radius and $l$ is the robot's track length.
 
-TF Tree             |  ROS nodes diagram
-:-------------------------:|:-------------------------:
-<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week1Challenge/visuals/q_qdot_vs_time.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/rosgraph.png" width="500">
-$
+TF Tree            
+:-------------------------:
+<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/rosgraph.png" width="500">
+
+
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
 ---
