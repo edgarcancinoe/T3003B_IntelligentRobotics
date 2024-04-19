@@ -7,7 +7,7 @@ Kinematic model of the PuzzleBot differential robot:
 ```math
 \dot{x} = v \cos{\theta}
 ```
-``math
+```math
 \dot{y} = v \sin{\theta}
 ```
 ``math
