@@ -42,7 +42,7 @@ Robot model diagram VS Time             |TF tree
 :-------------------------:|:-------------------------:
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/robot_model.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/tf_tree.png" width="500">
 
-Rviz simulation |Control Plots
+Rviz view simulation |Control Plots
 :-------------------------:|:-------------------------:
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/rviz.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/plots.png" width="500">
 
