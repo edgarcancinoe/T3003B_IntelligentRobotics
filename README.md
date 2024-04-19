@@ -3,7 +3,7 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
 ### Week 2: Challenge
-Control, odometry, and simulation in RViz of the Puzzlebot movement while following a waypoint-defined trajectory, based on the robot's kinematic state representation.
+Control, odometry, and simulation in RViz of the PuzzleBot movement while following a waypoint-defined trajectory, based on the robot's kinematic state representation.
 
 - Simulation of the robot's dynamics under its kinematic model.
 - Odometry by Dead Reckoning using RK4 numeric integration.
