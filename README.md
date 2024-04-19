@@ -16,6 +16,10 @@ Kinematic model of the PuzzleBot differential robot:
 Where $v$ and $w$ are linear and angular velocities in robot frame, whilst $x$, $y$, and $\theta$ are the state variables describing the pose in the 2D inertial frame.
 
 The relationship between a given linear and angular velocity control input $u =      \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix} \;
+
+```math
+     \begin{bmatrix} w_1 \\ w_2 \\ \vdots \\ w_n \end{bmatrix} \;
+```
 $
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
