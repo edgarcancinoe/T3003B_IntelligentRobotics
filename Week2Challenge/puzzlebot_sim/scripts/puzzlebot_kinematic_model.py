@@ -47,12 +47,11 @@ class PuzzlebotKinematicModel():
         self.w_r_publisher = rospy.Publisher(wr_topic, Float32, queue_size=10)
 
     def _wrap_to_Pi(self, theta):
-        return theta
-        result = np.fmod((theta + np.pi),(2 * np.pi))
+        result = np.fmod(theta, 2 * np.pi)
+        if 2*np.pi - result < 0.01:
+            result = 0.0
         return result
-        if(result < 0):
-            result += 2 * np.pi
-        return result - np.pi
+    
         
     def _stamp(self, pose):
         # Stamp the current pose with current time
@@ -104,7 +103,9 @@ class PuzzlebotKinematicModel():
         curr_s = curr_s + self._rk_integration(dt, curr_s, wr, wl)
         
         # Update state
-        self.s = Pose(position = Point(x = curr_s[0], y = curr_s[1], z = 0.0), orientation = Quaternion(x = 0.0, y = 0.0, z = self._wrap_to_Pi(curr_s[2]), w = 1.0))
+        print(self._wrap_to_Pi(curr_s[2]))
+        self.s = Pose(position = Point(x = curr_s[0], y = curr_s[1], z = 0.0), 
+                      orientation = Quaternion(x = 0.0, y = 0.0, z = self._wrap_to_Pi(curr_s[2]), w = 1.0))
 
         # Publish current state
         self.pose_publisher.publish(self._stamp(self.s))

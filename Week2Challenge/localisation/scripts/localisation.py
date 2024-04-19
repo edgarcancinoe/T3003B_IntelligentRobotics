@@ -37,12 +37,10 @@ class Locater():
                                       [self.r / (2*self.l), - self.r / (2*self.l)]])
     
     def _wrap_to_Pi(self, theta):
-        return theta
-        result = np.fmod((theta + np.pi),(2 * np.pi))
+        result = np.fmod(theta, 2 * np.pi)
+        if 2*np.pi - result < 0.01:
+            result = 0.0
         return result
-        if(result < 0):
-            result += 2 * np.pi
-        return result - np.pi
     
     def _get_dt(self):
         current_time = rospy.Time.now()

@@ -53,6 +53,13 @@ class Puzzlebot_controller():
         e_y = self.s_d.y - self.s.position.y
         e_l = np.sqrt((e_x * e_x) + (e_y * e_y))
         w_d = np.arctan2(e_y, e_x)
+
+        w_d = w_d % (2 * np.pi)
+        if w_d < 0:
+            w_d += 2 * np.pi
+        if 2*np.pi - w_d < 0.01:
+            w_d = 0.0
+        rospy.logwarn(f'Angulo deseado: {w_d}')
         e_w = w_d - self.s.orientation.z
 
         if e_l < self.d_tolerance:
@@ -145,9 +152,11 @@ if __name__=='__main__':
 
     # List of goals to reach
     goals = [Point(x = 1.0, y = 0.0, z = 0.0),
+             Point(x = -1.0, y = 0.0, z = 0.0),
+             Point(x = 1.0, y = 0.0, z = 0.0),
              Point(x = 1.0, y = 1.0, z = 0.0),
              Point(x = 0.0, y = 1.0, z = 0.0),
-             Point(x = 0.0, y = 0.0, z = 0.0)]
+             Point(x = -0.10, y = 0.0, z = 0.0)]
 
     # List index
     current_goal = 0
