@@ -5,7 +5,7 @@ from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Vector3, Point, Quaternion, Pose, Twist, PoseWithCovariance, TwistWithCovariance
 from nav_msgs.msg import Odometry
 import numpy as np
-from puzzlebot_util.util import get_global_params
+from puzzlebot_util.util import *
 
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
@@ -36,12 +36,6 @@ class Locater():
         self.decodematrix = np.array([[self.r / 2.0, self.r / 2.0], 
                                       [self.r / (2*self.l), - self.r / (2*self.l)]])
     
-    def _wrap_to_Pi(self, theta):
-        result = np.fmod(theta, 2 * np.pi)
-        if 2*np.pi - result < 0.01:
-            result = 0.0
-        return result
-    
     def _get_dt(self):
         current_time = rospy.Time.now()
         dt = (current_time - self.prev_time).to_sec()
@@ -66,7 +60,7 @@ class Locater():
             pose = PoseWithCovariance(
                 pose = Pose(
                     position = Point(x = self.sx, y = self.sy, z = 0.0),
-                    orientation = Quaternion(x = 0.0, y = 0.0, z = self._wrap_to_Pi(self.stheta), w = 1.0)
+                    orientation = Quaternion(x = 0.0, y = 0.0, z = wrap_to_Pi(self.stheta), w = 1.0)
                 ),
                 covariance = None
             ),

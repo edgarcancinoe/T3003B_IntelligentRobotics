@@ -6,7 +6,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Header
 import tf2_ros
 from geometry_msgs.msg import TransformStamped, Vector3, Quaternion, Transform
-from puzzlebot_util.util import get_global_params
+from puzzlebot_util.util import *
 
 class Joint_State_Publisher():
     def __init__(self, inertial_frame_name, robot_frame_name, joint_names, joint_initial_positions, joint_states_topic):
@@ -28,13 +28,6 @@ class Joint_State_Publisher():
     
     def _integrate_velocity(self, wdot, dt):
         return wdot * dt
-    
-    def _wrap_to_Pi(self, theta):
-        return theta
-        # result = np.fmod(theta + np.pi, 2 * np.pi)
-        # return result
-        result[result < 0] += 2 * np.pi
-        return result - np.pi
     
     def _quaternion_from_z_rotation(self, yaw):
         """
@@ -77,7 +70,7 @@ class Joint_State_Publisher():
 
         # 2.
         joints_velocities = np.array([msg.twist.twist.angular.x, msg.twist.twist.angular.y])
-        self.joints_positions = self._wrap_to_Pi(self.joints_positions + self._integrate_velocity(joints_velocities, self._get_dt()))
+        self.joints_positions = wrap_to_Pi(self.joints_positions + self._integrate_velocity(joints_velocities, self._get_dt()))
         
         self.joint_state_publisher.publish(JointState(header=header, 
                                                       position=self.joints_positions, 

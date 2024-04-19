@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32
 from geometry_msgs.msg import Vector3, Twist, Point, Pose, Quaternion
 from nav_msgs.msg import Odometry
-from puzzlebot_util.util import get_global_params
+from puzzlebot_util.util import *
 
 class Puzzlebot_controller():
     def __init__(self, starting_pose, starting_orientation,
@@ -43,31 +43,11 @@ class Puzzlebot_controller():
         
         # Publishers
         self.cmd_vel_publisher = rospy.Publisher('/' + commands_topic, Twist, queue_size=10)
-        self.error_publisher = rospy.Publisher('/errors', Twist, queue_size=10)
+        # self.error_publisher = rospy.Publisher('/errors', Twist, queue_size=10)
+        # self.ref_publisher = rospy.Publisher('/ref', Twist, queue_size=10)
 
         # Time
         self.time = rospy.Time.now()
-        
-    def _compute_errors(self):
-        e_x = self.s_d.x - self.s.position.x
-        e_y = self.s_d.y - self.s.position.y
-        e_l = np.sqrt((e_x * e_x) + (e_y * e_y))
-        w_d = np.arctan2(e_y, e_x)
-
-        w_d = w_d % (2 * np.pi)
-        if w_d < 0:
-            w_d += 2 * np.pi
-        if 2*np.pi - w_d < 0.01:
-            w_d = 0.0
-        rospy.logwarn(f'Angulo deseado: {w_d}')
-        e_w = w_d - self.s.orientation.z
-
-        if e_l < self.d_tolerance:
-            e_l = 0.0
-        if e_w < self.w_tolerance:
-            e_w = 0.0
-
-        return e_l, e_w
     
     def _get_dt(self):
         current_time = rospy.Time.now()
@@ -94,12 +74,36 @@ class Puzzlebot_controller():
 
     def goal_set(self):
         return self.s_d == None
+    
+    def _compute_errors(self):
+        # Position errors
+        e_x = self.s_d.x - self.s.position.x
+        e_y = self.s_d.y - self.s.position.y
+        # Distance error
+        e_l = np.sqrt((e_x * e_x) + (e_y * e_y))
+        
+        # Angular reference
+        w_d = np.arctan2(e_y, e_x)
+        # Angular errror
+        e_w = w_d - self.s.orientation.z
 
+        if np.abs(e_l) < self.d_tolerance:
+            e_l = 0.0
+        if np.abs(e_w) < self.w_tolerance:
+            e_w = 0.0
+
+        # ref = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
+        #             angular = Vector3(x = 0.0, y = 0.0, z = w_d))
+        
+        # self.ref_publisher.publish(ref)
+        return e_l, e_w
+    
     def compute_output(self):
         # Proportional errors
         e_l, e_w, = self._compute_errors()
         
         dt = self._get_dt()
+
         # Integral error
         self.ei_l += e_l * dt
         self.ei_w += e_w * dt
@@ -107,20 +111,23 @@ class Puzzlebot_controller():
         # Derivative error
         e_dot_l, e_dot_w = self._get_e_dot(e_l, e_w)
 
-        errors = Twist( linear = Vector3(x = e_l, y = self.ei_l, z = e_dot_l),
-                            angular = Vector3(x = e_w, y = self.ei_w, z = e_dot_w))
+        # errors = Twist( linear = Vector3(x = e_l, y = self.ei_l, z = e_dot_l),
+        #                     angular = Vector3(x = e_w, y = self.ei_w, z = e_dot_w))
         
         twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
                             angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
         reached = False
-        if e_w > 0.0:
+        
+        # Not aligned
+        if e_w != 0.0:
             twist_msg.angular.z = (self.kp_w * e_w) + (self.ki_w * self.ei_w) + (self.kd_w * e_dot_w)
-        elif e_l > 0.0:
+        elif e_l != 0.0: # If aligned
             twist_msg.linear.x = (self.kp_l * e_l) + (self.ki_l * self.ei_l) + (self.kd_l * e_dot_l)
-        else:
+        else: # Reached Goal
             reached = True
         self.cmd_vel_publisher.publish(twist_msg)
-        self.error_publisher.publish(errors)
+        # self.error_publisher.publish(errors)
+
         return reached
 
     
@@ -151,12 +158,11 @@ if __name__=='__main__':
     starting_orientation = params['starting_state']['theta']
 
     # List of goals to reach
-    goals = [Point(x = 1.0, y = 0.0, z = 0.0),
-             Point(x = -1.0, y = 0.0, z = 0.0),
+    goals = [
              Point(x = 1.0, y = 0.0, z = 0.0),
              Point(x = 1.0, y = 1.0, z = 0.0),
              Point(x = 0.0, y = 1.0, z = 0.0),
-             Point(x = -0.10, y = 0.0, z = 0.0)]
+             Point(x = 0.0, y = 0.0, z = 0.0)]
 
     # List index
     current_goal = 0
@@ -184,7 +190,7 @@ if __name__=='__main__':
             if reached_goal:
                 print(f'Goal {current_goal} reached')
                 current_goal += 1
-                current_goal = current_goal % 4
+                current_goal = current_goal % len(goals)
                 print(f'Reaching for goal {current_goal}..')
                 puzzlebot_controller.set_goal(goals[current_goal])
             loop_rate.sleep()

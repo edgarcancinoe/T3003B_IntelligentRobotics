@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Quaternion
-from puzzlebot_util.util import get_global_params
+from puzzlebot_util.util import *
 
 class PuzzlebotKinematicModel():
     """
@@ -45,13 +45,6 @@ class PuzzlebotKinematicModel():
         self.pose_publisher = rospy.Publisher(pose_topic, PoseStamped, queue_size=10)
         self.w_l_publisher = rospy.Publisher(wl_topic, Float32, queue_size=10)
         self.w_r_publisher = rospy.Publisher(wr_topic, Float32, queue_size=10)
-
-    def _wrap_to_Pi(self, theta):
-        result = np.fmod(theta, 2 * np.pi)
-        if 2*np.pi - result < 0.01:
-            result = 0.0
-        return result
-    
         
     def _stamp(self, pose):
         # Stamp the current pose with current time
@@ -103,9 +96,8 @@ class PuzzlebotKinematicModel():
         curr_s = curr_s + self._rk_integration(dt, curr_s, wr, wl)
         
         # Update state
-        print(self._wrap_to_Pi(curr_s[2]))
         self.s = Pose(position = Point(x = curr_s[0], y = curr_s[1], z = 0.0), 
-                      orientation = Quaternion(x = 0.0, y = 0.0, z = self._wrap_to_Pi(curr_s[2]), w = 1.0))
+                      orientation = Quaternion(x = 0.0, y = 0.0, z = wrap_to_Pi(curr_s[2]), w = 1.0))
 
         # Publish current state
         self.pose_publisher.publish(self._stamp(self.s))

@@ -1,4 +1,5 @@
 import rospy
+import numpy as np
 
 def get_global_params():
     # Reading parameters from the ROS parameter server
@@ -17,3 +18,13 @@ def get_global_params():
     }
 
     return params
+
+def wrap_to_Pi(theta):
+    result = np.fmod(theta + np.pi, 2 * np.pi)
+
+    if isinstance(theta, np.ndarray):
+        result[result < 0] += 2 * np.pi
+    elif result < 0: 
+        result += 2 * np.pi
+    return result - np.pi
+    

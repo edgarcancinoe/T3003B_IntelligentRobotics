@@ -20,15 +20,15 @@ joint_state_pub:
 
 control:
   # Proportional controller
-  kp_V: 0.35
-  kp_w: 0.52
+  kp_V: 0.5
+  kp_w: 0.82
   # Integral controller
-  ki_V: 0.0075
-  ki_w: 0.0058
+  ki_V: 0.008
+  ki_w: 0.0002
   # Derivative controller
-  kd_V: 0.1
-  kd_w: 0.1
+  kd_V: 0.05
+  kd_w: 0.05
 
   # Tolerances
   d_tolerance: 0.0025
-  deg_tolerance: 0.025
+  deg_tolerance: 0.005
