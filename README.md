@@ -26,14 +26,16 @@ The relationship between a given linear and angular velocity control input and t
 ```
 Where $r$ is the wheel radius and $l$ is the robot's track length.
 
-<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/robot_model.png" width="350">
 
 ##### ROS Nodes diagram
 <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/rosgraph.png" width="1000">
 
-##### TF tree
-<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/tf_tree.png" width="500">
+##### tree
 
+Robot model diagram VS Time             |  TF 
+:-------------------------:|:-------------------------:
+<img <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/robot_model.png" width="350">
+ | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/tf_tree.png" width="500">
 
 <a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
 
