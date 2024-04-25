@@ -2,6 +2,53 @@
 Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
+### Week 2: Challenge
+Control, odometry, and simulation in RViz of the PuzzleBot movement while following a waypoint-defined trajectory, based on the robot's kinematic state representation.
+
+- Simulation of the robot's dynamics under its kinematic model.
+- Odometry by Dead Reckoning using RK4 numeric integration.
+- Implementation of the linear controller (PID) to control the robot's linear and angular velocity in the robot frame.
+
+#### Robot model
+Kinematic model of the PuzzleBot differential robot:
+```math
+\dot{x} = v \cos{\theta}
+```
+```math
+\dot{y} = v \sin{\theta}
+```
+```math
+\dot{\theta} = \omega
+```
+Where $v$ and $w$ are linear and angular velocities in robot frame, whilst $x$, $y$, and $\theta$ are the state variables describing the pose in the 2D inertial frame.
+
+The relationship between a given linear and angular velocity control input and the robot wheels' speeds is:
+
+```math
+     u = \begin{bmatrix} V \\ \omega \\ \end{bmatrix} = \begin{bmatrix}
+\frac{r}{2} & \frac{r}{2} \\
+\frac{r}{l} & -\frac{r}{l}
+\end{bmatrix} \begin{bmatrix} \omega_r \\ \omega_l \\ \end{bmatrix}
+```
+Where $r$ is the wheel radius and $l$ is the robot's track length.
+
+
+Robot model diagram VS Time|
+:-------------------------:|
+<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/rosgraph.png" width="1000">|
+
+
+Robot model diagram VS Time             |TF tree
+:-------------------------:|:-------------------------:
+<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/robot_model.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/tf_tree.png" width="500">
+
+Rviz simulation |Control Plots
+:-------------------------:|:-------------------------:
+<img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/rviz_view.png" width="500"> | <img src="https://github.com/edgarcancinoe/T3003B_IntelligentRobotics/blob/main/Week2Challenge/plots.png" width="500">
+
+<a href="https://www.youtube.com/embed/dPIq9fL0Sxc?si=p-V4RuxIzM52Lr4Z">Watch simulation results on youtube<a/>
+
+---
 
 ### Week 1: Challenge
 
