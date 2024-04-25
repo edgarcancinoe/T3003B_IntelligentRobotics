@@ -9,6 +9,9 @@ from geometry_msgs.msg import TransformStamped, Vector3, Quaternion, Transform, 
 from puzzlebot_util.util import *
 
 class Joint_State_Publisher():
+    """
+        Listen to odometry topic and publish to rviz
+    """
     def __init__(self, inertial_frame_name, robot_frame_name, 
                  joint_names, joint_initial_positions, joint_states_topic, 
                  starting_state, odom_topic, rviz_rate):
