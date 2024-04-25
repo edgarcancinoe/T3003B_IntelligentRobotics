@@ -1,4 +1,7 @@
-node_rate: 100
+control_rate: 50
+kmodel_rate: 50
+odom_rate: 50
+rviz_rate: 50
 wheel_radius: 0.05
 track_length: 0.19
 inertial_frame_name: 'odom'

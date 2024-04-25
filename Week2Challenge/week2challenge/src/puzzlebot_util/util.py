@@ -4,7 +4,10 @@ import numpy as np
 def get_global_params():
     # Reading parameters from the ROS parameter server
     params = {
-        'freq': rospy.get_param('/node_rate', 100),
+        'kmodel_rate': rospy.get_param('/kmodel_rate', 50),
+        'odom_rate': rospy.get_param('/odom_rate', 50),
+        'control_rate': rospy.get_param('/control_rate', 50),
+        'rviz_rate': rospy.get_param('/rviz_rate', 50),
         'inertial_frame_name': rospy.get_param('/inertial_frame_name', 'odom'),
         'robot_frame_name': rospy.get_param('/robot_frame_name', 'base_link'),
         'wheel_radius': rospy.get_param('/wheel_radius', 0.05),

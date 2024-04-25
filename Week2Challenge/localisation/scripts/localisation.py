@@ -10,11 +10,8 @@ from puzzlebot_util.util import *
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
     def __init__(self, odometry_topic, inertial_frame_name, robot_frame_name, 
-                 wheel_radius, track_length, starting_state):
-        
-        self.odom_publisher = rospy.Publisher('/' + odometry_topic, Odometry, queue_size=10)
-        self.prev_time = rospy.Time.now()
-        
+                 wheel_radius, track_length, starting_state, odom_rate):
+                
         self.frame_id = inertial_frame_name
         self.child_frame_id = robot_frame_name
         
@@ -35,13 +32,22 @@ class Locater():
         
         self.decodematrix = np.array([[self.r / 2.0, self.r / 2.0], 
                                       [self.r / (2*self.l), - self.r / (2*self.l)]])
-    
-    def _get_dt(self):
-        current_time = rospy.Time.now()
-        dt = (current_time - self.prev_time).to_sec()
-        self.prev_time = current_time
-        return dt
-    
+
+        # Publisher
+        self.odom_publisher = rospy.Publisher('/' + odometry_topic, Odometry, queue_size=10)
+
+        # wl wr Suscriber
+        wlsub = message_filters.Subscriber(params['wl_topic'], Float32)
+        wrsub = message_filters.Subscriber(params['wr_topic'], Float32)
+        # Synchronizer
+        ts = message_filters.ApproximateTimeSynchronizer([wlsub, wrsub], queue_size=10, slop=1.0/odom_rate, allow_headerless=True)
+        ts.registerCallback(self._w_callback)
+        
+        # Control simulation / integration rate
+        self.listening = False
+        rospy.Timer(rospy.Duration(1.0/odom_rate), self.step)
+        self.last_timestamp = rospy.Time.now()
+
     def _system_gradient(self, theta, dd, dtheta):
         return np.array([dd * np.cos(theta), dd * np.sin(theta), dtheta])
     
@@ -73,52 +79,49 @@ class Locater():
                 covariance = None
             )
         ))
+       
+    def _w_callback(self, wl, wr):
+        if self.listening:
+            self.v, self.w = np.dot(self.decodematrix, np.array([wr.data, wl.data]).T).flatten()
+            self.wl = wl.data
+            self.wr = wr.data
+            self.listening = False
 
-    def w_callback(self, wl, wr):
-        self.v, self.w = np.dot(self.decodematrix, np.array([wr.data, wl.data]).T).flatten()
-        self.wl = wl.data
-        self.wr = wr.data
+    def _get_dt(self):
+        current_time = rospy.Time.now()
+        dt = (current_time - self.last_timestamp).to_sec()
+        self.last_timestamp = current_time
+        return dt
+    
 
-    def step(self):
+    def step(self, _):
+        
         dt = self._get_dt()
 
+        # Integration
         delta = self._rk4_delta(dt, self.stheta, self.v, self.w)
-
         self.sx += delta[0]
         self.sy += delta[1]
         self.stheta += delta[2]
 
+        # Publish new state data
         self._publishOdom()
-        # self.v = 0.0
-        # self.w = 0.0
+        
+        self.listening = True
+
 
 if __name__ == '__main__':
     rospy.init_node('localisation')
 
-
     # Get Global ROS parameters
     params = get_global_params()
-    # Local
-    slop = 0.1 # How many seconds two messages must be apart to be considered simultaneous
 
     locater = Locater(odometry_topic=params['odometry_topic'], inertial_frame_name=params['inertial_frame_name'],
                       robot_frame_name=params['robot_frame_name'], wheel_radius=params['wheel_radius'],
-                      track_length=params['track_length'], starting_state=params['starting_state'])
+                      track_length=params['track_length'], odom_rate=params['odom_rate'], starting_state=params['starting_state'])
 
-
-    wlsub = message_filters.Subscriber(params['wl_topic'], Float32)
-    wrsub = message_filters.Subscriber(params['wr_topic'], Float32)
-
-    # Synchronizer
-    ts = message_filters.ApproximateTimeSynchronizer([wlsub, wrsub], queue_size=10, slop=slop, allow_headerless=True)
-    ts.registerCallback(locater.w_callback)
-
-    loop_rate = rospy.Rate(params['freq'])
-    rospy.loginfo('Localisation node running')
     try:
-        while not rospy.is_shutdown():
-            locater.step()
-            loop_rate.sleep()
-
+        rospy.loginfo('Localisation node running')
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass

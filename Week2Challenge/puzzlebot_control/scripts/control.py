@@ -10,7 +10,7 @@ from puzzlebot_util.util import *
 class Puzzlebot_controller():
     def __init__(self, starting_pose, starting_orientation,
                  kp_V, ki_V, kd_V, kp_w, ki_w, kd_w, 
-                 d_tolerance, deg_tolerance, commands_topic):
+                 d_tolerance, deg_tolerance, commands_topic, odom_topic, control_rate):
 
         # Proportional controller gains
         self.kp_l = kp_V
@@ -45,10 +45,36 @@ class Puzzlebot_controller():
         self.cmd_vel_publisher = rospy.Publisher('/' + commands_topic, Twist, queue_size=10)
         self.error_publisher = rospy.Publisher('/errors', Twist, queue_size=10)
         self.ref_publisher = rospy.Publisher('/ref', Twist, queue_size=10)
+        # Suscriber
+        rospy.Subscriber(odom_topic, Odometry, self.odometry_callback)
+        
+        
+        # List of goals to reach
+        self.goals = [
+                Point(x = 0.385, y = 0.00, z = 0.00),
+                Point(x = 0.192, y = 0.333, z = 0.00),
+                Point(x = -0.192, y = 0.333, z = 0.00),
+                Point(x = -0.385, y = 0.00, z = 0.00),
+                Point(x = -0.192, y = -0.333, z = 0.00),
+                Point(x = 0.192, y = -0.333, z = 0.00)
+                ]
+
+        # List index
+        self.current_goal = 0
+        self.n_goals = len(self.goals)
+
+        # Set goal
+        self.set_goal(self.goals[self.current_goal])
+        
+        self.reached_goal = False
+
+        rospy.Timer(rospy.Duration(1.0/control_rate), self.compute_output)
 
         # Time
         self.time = rospy.Time.now()
-    
+
+
+
     def _get_dt(self):
         current_time = rospy.Time.now()
         dt = (current_time - self.time).to_sec()
@@ -71,6 +97,7 @@ class Puzzlebot_controller():
         self.e_l_prev = 0.0
         self.e_w_prev = 0.0
         self.s_d = goal
+        rospy.logwarn(f'Reaching for goal {self.current_goal}..')
 
     def goal_set(self):
         return self.s_d == None
@@ -98,7 +125,7 @@ class Puzzlebot_controller():
         self.ref_publisher.publish(ref)
         return e_l, e_w
     
-    def compute_output(self):
+    def compute_output(self, _):
         # Proportional errors
         e_l, e_w, = self._compute_errors()
         
@@ -116,7 +143,6 @@ class Puzzlebot_controller():
         
         twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
                             angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
-        reached = False
         
         # Not aligned
         if e_w != 0.0:
@@ -124,13 +150,15 @@ class Puzzlebot_controller():
         elif e_l != 0.0: # If aligned
             twist_msg.linear.x = (self.kp_l * e_l) + (self.ki_l * self.ei_l) + (self.kd_l * e_dot_l)
         else: # Reached Goal
-            reached = True
+            rospy.logwarn(f'Goal {self.current_goal} reached')
+            self.current_goal += 1
+            self.current_goal = self.current_goal % self.n_goals
+            self.set_goal(self.goals[self.current_goal])
+
         self.cmd_vel_publisher.publish(twist_msg)
         self.error_publisher.publish(errors)
 
-        return reached
 
-    
 
 if __name__=='__main__':
     # Initialise and Setup node
@@ -157,49 +185,19 @@ if __name__=='__main__':
                           z = 0.0)
     starting_orientation = params['starting_state']['theta']
 
-    # List of goals to reach
-    goals = [
-            Point(x = 0.385, y = 0.00, z = 0.00),
-            Point(x = 0.192, y = 0.333, z = 0.00),
-            Point(x = -0.192, y = 0.333, z = 0.00),
-            Point(x = -0.385, y = 0.00, z = 0.00),
-            Point(x = -0.192, y = -0.333, z = 0.00),
-            Point(x = 0.192, y = -0.333, z = 0.00)
-            ]
-
-
-
-
-    # List index
-    current_goal = 0
-
     # Initialize controller
-    puzzlebot_controller = Puzzlebot_controller(starting_pose, starting_orientation, 
-                                                kp_V, ki_V, kd_V, kp_w, ki_w, kd_w,
-                                                d_tolerance, deg_tolerance, params['commands_topic'])
-
-
-    rospy.Subscriber(params['odometry_topic'], Odometry, puzzlebot_controller.odometry_callback)
-    
-
-    loop_rate = rospy.Rate(params['freq'])
-    rospy.loginfo('The controller node is Running')
-    
-    # Set goal
-    puzzlebot_controller.set_goal(goals[current_goal])
-    
-    print(f'Reaching for goal {current_goal}..')
+    puzzlebot_controller = Puzzlebot_controller(starting_pose = starting_pose, 
+                                                starting_orientation = starting_orientation, 
+                                                kp_V = kp_V, ki_V = ki_V, kd_V = kd_V,
+                                                kp_w = kp_w, ki_w = ki_w, kd_w = kd_w,
+                                                d_tolerance = d_tolerance, 
+                                                deg_tolerance = deg_tolerance, 
+                                                commands_topic = params['commands_topic'],
+                                                odom_topic = params['odometry_topic'],
+                                                control_rate = params['control_rate'])
     try:
-        while not rospy.is_shutdown():
-            reached_goal = puzzlebot_controller.compute_output()
-            
-            if reached_goal:
-                print(f'Goal {current_goal} reached')
-                current_goal += 1
-                current_goal = current_goal % len(goals)
-                print(f'Reaching for goal {current_goal}..')
-                puzzlebot_controller.set_goal(goals[current_goal])
-            loop_rate.sleep()
-    
+        rospy.loginfo('The controller node is Running')
+        rospy.spin()
     except rospy.ROSInterruptException:
-        pass 
+        pass
+

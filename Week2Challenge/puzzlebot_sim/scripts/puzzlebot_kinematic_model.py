@@ -18,14 +18,14 @@ class PuzzlebotKinematicModel():
 
     """
 
-    def __init__(self, inertial_frame: str, x: float, y:float, theta:float, 
-                 r:float, l:float, pose_topic: str, wl_topic: str, wr_topic: str) -> None:
+    def __init__(self, inertial_frame: str, 
+                 x: float, y:float, theta:float, 
+                 r:float, l:float, 
+                 pose_topic: str, wl_topic: str, wr_topic: str, commands_topic: str,
+                 sim_rate: float) -> None:
         
         # Identifier
         self.frame_id = inertial_frame
-
-        # Frequency
-        self.prev_time = rospy.Time.now()
 
         # Attributes
         self.r = r
@@ -40,12 +40,20 @@ class PuzzlebotKinematicModel():
         
         # Control to wheel velocities matrix
         self.u2w_mat_inv = np.linalg.inv(np.array([[self.r/2.0, self.r/2.0], [self.r/(2.0 * self.l), -self.r/(2.0 * self.l)]]))
-
+        
+        # Subscriber to commands_topic
+        rospy.Subscriber(commands_topic, Twist, self.cmd_vel_callback)
+    
         # Publishers
         self.pose_publisher = rospy.Publisher(pose_topic, PoseStamped, queue_size=10)
         self.w_l_publisher = rospy.Publisher(wl_topic, Float32, queue_size=10)
         self.w_r_publisher = rospy.Publisher(wr_topic, Float32, queue_size=10)
         
+        # Timer to mantain simulation dt constant
+        self.listening = False
+        self.last_timestamp = rospy.Time.now()
+        rospy.Timer(rospy.Duration(1.0/sim_rate), self.simulate)
+
     def _stamp(self, pose):
         # Stamp the current pose with current time
         header = Header(frame_id = self.frame_id, stamp = rospy.Time.now())
@@ -54,8 +62,8 @@ class PuzzlebotKinematicModel():
     
     def _get_dt(self):
         current_time = rospy.Time.now()
-        dt = (current_time - self.prev_time).to_sec()
-        self.prev_time = current_time
+        dt = (current_time - self.last_timestamp).to_sec()
+        self.last_timestamp = current_time
         return dt
     
     def _state_gradient(self, theta, wr, wl):
@@ -71,8 +79,10 @@ class PuzzlebotKinematicModel():
     
     def cmd_vel_callback(self, msg):
         # Controlling V & w
-        self.V = msg.linear.x
-        self.w = msg.angular.z
+        if self.listening:
+            self.V = msg.linear.x
+            self.w = msg.angular.z
+            self.listening = False
     
     def _rk_integration(self, dt, state, wr, wl):
         # Compute RK4 updates
@@ -84,7 +94,7 @@ class PuzzlebotKinematicModel():
         # Update position and orientation using RK4
         return dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
         
-    def step(self):
+    def simulate(self, _):
         # Compute dt based on elapsed time
         dt = self._get_dt()
 
@@ -107,13 +117,12 @@ class PuzzlebotKinematicModel():
         # Reset velocities
         self.V = 0.0
         self.w = 0.0
+        self.listening = True
 
 if __name__ == '__main__':
     rospy.init_node('puzzlebot_kinematic_model')
 
     # Get ROS parameters
-
-    # Global
     params = get_global_params()
 
     # Initialize class
@@ -124,17 +133,11 @@ if __name__ == '__main__':
                                     r=params['wheel_radius'], l=params['track_length'],
                                     pose_topic=params['pose_topic'],
                                     wl_topic=params['wl_topic'],
-                                    wr_topic=params['wr_topic'])
-
-    # Susbcribe to commands and use model class' method
-    rospy.Subscriber(params['commands_topic'], Twist, model.cmd_vel_callback)
-    
-    loop_rate = rospy.Rate(params['freq'])
-    rospy.loginfo('Kinematic model node running')
+                                    wr_topic=params['wr_topic'],
+                                    commands_topic=params['commands_topic'],
+                                    sim_rate = params['kmodel_rate'])
     try:
-        while not rospy.is_shutdown():
-            model.step()
-            loop_rate.sleep()
-
+        rospy.loginfo('Kinematic model node running')
+        rospy.spin()
     except rospy.ROSInterruptException:
         pass
