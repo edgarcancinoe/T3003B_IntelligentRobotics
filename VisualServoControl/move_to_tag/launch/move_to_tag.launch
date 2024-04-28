@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<launch>
+        <!-- Launch simulation environment -->
+        <arg name="world_file" default="$(find move_to_tag)/worlds/world.world"/>
+        <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(arg world_file)" output="screen"/>
+
+        <!-- <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include> -->
+        
+        <!-- <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen">
+                <param name="video_device" value="/dev/video0" />
+                <param name="image_width" value="640" />
+                <param name="image_height" value="480" />
+                <param name="pixel_format" value="yuyv" />
+                <param name="camera_frame_id" value="usb_cam" />
+                <param name="io_method" value="mmap"/>
+        </node> -->
+
+        <!-- Load config file for nodes parameter configuration -->
+        <rosparam file="$(find week2challenge)/config/config.yaml" command="load" />
+
+        <!-- <node pkg="move_to_tag" type="vision.py" name="vision" output="screen"/> -->
+
+        <!-- <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
+        <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
+        <node pkg="puzzlebot_control" type="control.py" name="control" output="screen"/> -->
+
+</launch>

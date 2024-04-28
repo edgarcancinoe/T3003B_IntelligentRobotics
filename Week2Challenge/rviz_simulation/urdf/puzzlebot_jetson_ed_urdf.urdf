@@ -73,17 +73,33 @@
     <joint name="camera_joint" type="fixed">
         <parent link="chassis"/>
         <child link="camera_link"/>
-        <origin xyz="0.045 0 0.02"/>
+        <origin xyz="0.1 0.0 0.04" rpy="1.57079632679 0 1.57079632679"/>
     </joint>
 
     <!-- Camera Link -->
     <link name="camera_link">
         <visual>
-            <origin xyz="0.043 0 0.02" rpy="1.57079632679 0 1.57079632679"/>
+            <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="package://rviz_simulation/models/camera.stl"/>
             </geometry>
         </visual>
     </link>
-</robot>
 
+    <joint name="object" type="fixed">
+        <origin xyz="0.0 0.0 50.0" rpy="0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="object"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+
+    <link name="object">
+        <visual>
+            <origin xyz="-0.02 0.02 -0.02" rpy = "0 0 0"/>
+            <geometry>
+                <mesh filename="package://rviz_simulation/models/cube.stl" scale="0.002 0.002 0.002"/>
+            </geometry>
+        </visual>
+    </link>
+
+</robot>
