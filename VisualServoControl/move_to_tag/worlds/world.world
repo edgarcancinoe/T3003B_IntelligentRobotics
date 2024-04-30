@@ -11,7 +11,15 @@
     <include>
       <uri>model://aruco_box</uri>
     </include>
+    
+    <include>
+      <uri>model://aruco_box2</uri>
+    </include>
 
+    <include>
+      <uri>model://aruco_box3</uri>
+    </include>
+  
     <include>
       <uri>model://puzzlebot</uri>
     </include>

@@ -1,0 +1,47 @@
+camera_matrix: [[530.466941, 0, 205], [0, 530.466941, 154], [0, 0, 1]]
+
+distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
+camera_frame: 'camera_link'
+object_frame: 'object_link'
+camera_topic: 'puzzlebot/camera/image_raw'
+target_id: 3
+
+desired_corner_locations: [[[308., 376.], [308., 271.], [421., 272.], [418., 380.]]]
+visual_controller_topic: '/corners'
+# control_rate: 50
+# kmodel_rate: 50
+# odom_rate: 50
+# rviz_rate: 50
+# wheel_radius: 0.05
+# track_length: 0.19
+# inertial_frame_name: 'odom'
+# robot_frame_name: 'base_link'
+# commands_topic: 'cmd_vel'
+# pose_topic: 'pose'
+# wl_topic: 'wl'
+# wr_topic: 'wr'
+# odometry_topic: 'odom'
+# starting_state:
+#   'x': 0.0
+#   'y': 0.0
+#   'theta': 0.0
+
+# joint_state_pub:
+#   joint_states_topic: '/joint_states'
+#   joint_names: ['leftWheel', 'rightWheel']
+#   joint_initial_positions: [0.0, 0.0]
+
+# control:
+#   # Proportional controller
+#   kp_V: 0.5
+#   kp_w: 0.82
+#   # Integral controller
+#   ki_V: 0.008
+#   ki_w: 0.0002
+#   # Derivative controller
+#   kd_V: 0.05
+#   kd_w: 0.05
+
+#   # Tolerances
+#   d_tolerance: 0.0025
+#   deg_tolerance: 0.005

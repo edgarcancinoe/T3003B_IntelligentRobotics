@@ -2,7 +2,6 @@
   <sdf version='1.6'>
     <model name="puzzlebot">
       <static>false</static>
-
       <link name='chassis'>
         <pose>-0.025 0 0.06 1.57079632679 0 1.57079632679</pose>
           <collision name='collision'>
@@ -133,12 +132,18 @@
         </collision>
         <inertial>
           <inertia>
-            <ixx>0.000012666667</ixx>
+            <!-- <ixx>0.000012666667</ixx>
             <ixy>0</ixy>
             <ixz>0</ixz>
             <iyy>0.000012666667</iyy>
             <iyz>0</iyz>
-            <izz>0.000025</izz>
+            <izz>0.000025</izz> -->
+            <ixx>0.0</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0</iyy>
+            <iyz>0</iyz>
+            <izz>0.0</izz>
           </inertia>
           <mass>0.02</mass>
         </inertial>
@@ -180,12 +185,18 @@
         </collision>
         <inertial>
           <inertia>
-            <ixx>0.000012666667</ixx>
+            <!-- <ixx>0.000012666667</ixx>
             <ixy>0</ixy>
             <ixz>0</ixz>
             <iyy>0.000012666667</iyy>
             <iyz>0</iyz>
-            <izz>0.000025</izz>
+            <izz>0.000025</izz> -->
+            <ixx>0.0</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0</iyy>
+            <iyz>0</iyz>
+            <izz>0.0</izz>
           </inertia>  
           <mass>0.02</mass>
         </inertial>
@@ -229,7 +240,7 @@
     </joint>
 
     <link name="camera_link">
-        <pose>0.1 0 0.09 1.57079632679 0 1.57079632679</pose>
+        <pose>0.075 0 0.09 1.75079632679 0 1.57079632679</pose>
         <visual name="visual">
             <geometry>
             <mesh>
@@ -244,10 +255,10 @@
         <parent>camera_link</parent>
     </joint>
     <link name="camera_lens_link">
-      <pose> 0.1 0 0.09 0 0 0</pose>
+      <pose> 0.075 0 0.09 0 0.18 0</pose>
       <sensor name="camera" type="camera">
             <camera name="__default__">
-              <horizontal_fov>1.085595</horizontal_fov>
+              <horizontal_fov>1.0856</horizontal_fov>
               <image>
                 <width>640</width>
                 <height>480</height>
@@ -255,7 +266,7 @@
               </image>
               <clip>
                 <near>0.03</near>
-                <far>10</far>
+                <far>300</far>
               </clip>
             </camera>
 
@@ -273,7 +284,7 @@
     			      <hackBaseline>0.07</hackBaseline>
                 <Cx>205</Cx>
     			      <Cy>154</Cy>
-    			      <focalLength>339.830384</focalLength>
+    			      <focalLength>530.466941 </focalLength>
                 <distortionK1>0.0</distortionK1>
                 <distortionK2>0.0</distortionK2>
                 <distortionK3>0.0</distortionK3>

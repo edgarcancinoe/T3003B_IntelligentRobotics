@@ -1,9 +1,9 @@
 <?xml  version="1.0" ?>
 <sdf version="1.5">
 
- <model name='aruco_box'>
+ <model name='aruco_box3'>
       <static>false</static>
-      <pose>1.2 0.3 0.025 0 0 0.6</pose>
+      <pose>1.1 0.1 0.025 -1.57079632679 -1.57079632679 0</pose>
       <link name='link'>
         <collision name='collision'>
           <geometry>
