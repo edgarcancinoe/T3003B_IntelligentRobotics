@@ -4,7 +4,7 @@
         <arg name="world_file" default="$(find move_to_tag)/worlds/world.world"/>
         <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(arg world_file)" output="screen"/>
 
-        <!-- <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include> -->
+        <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include>
         
         <!-- Load config file for nodes parameter configuration -->
         <rosparam file="$(find move_to_tag)/config/config.yaml" command="load" />

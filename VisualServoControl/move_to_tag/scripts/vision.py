@@ -45,7 +45,7 @@ class ArucoDetector:
     def _verbose(self, _):
         if self.verbose:
             for marker in self.on_sight:
-                rospy.loginfo(f"Markers on sight: {marker} detected at {self.knowledge.get(marker)[0]}")
+                rospy.loginfo(f"\nMarkers on sight: {marker} detected at {self.knowledge.get(marker)[0]}\n")
             self.on_sight = []
 
     def image_callback(self, frame):
@@ -62,7 +62,7 @@ class ArucoDetector:
         for i in range(0, len(ids)):
 
             # Estimate pose
-            rvec, tvec, markerPoints = aruco.estimatePoseSingleMarkers(corners[i], 0.072, self.camera_matrix,
+            rvec, tvec, markerPoints = aruco.estimatePoseSingleMarkers(corners[i], 0.05, self.camera_matrix,
                                                                     self.distortion_coeffs)
             rvec = rvec.flatten()
             tvec = tvec.flatten()
@@ -102,7 +102,7 @@ class ArucoDetector:
 
             # Broadcast corners to controller topic
             self.corner_pub.publish(Polygon(
-                points=[Point(x=corner[0], y=corner[1]) for corner in corners[i][0]]
+                points=[Point(x=corner[0], y=corner[1], z=tvec[2]) for corner in corners[i][0]]
             ))
 
 

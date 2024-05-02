@@ -73,13 +73,13 @@
     <joint name="camera_joint" type="fixed">
         <parent link="chassis"/>
         <child link="camera_link"/>
-        <origin xyz="0.1 0.0 0.04" rpy="1.57079632679 0 1.57079632679"/>
+        <origin xyz="0.1 0.0 0.04" rpy="-1.75079632679 0 -1.57079632679"/>
     </joint>
 
     <!-- Camera Link -->
     <link name="camera_link">
         <visual>
-            <origin xyz="0 0.0 0.0" rpy="0 0 0"/>
+            <origin xyz="0 0.0 0.0" rpy="0 0 3.14159"/>
             <geometry>
                 <mesh filename="package://rviz_simulation/models/camera.stl"/>
             </geometry>

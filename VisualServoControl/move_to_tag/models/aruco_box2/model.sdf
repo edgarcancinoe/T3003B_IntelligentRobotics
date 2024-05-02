@@ -3,7 +3,7 @@
 
  <model name='aruco_box2'>
       <static>false</static>
-      <pose>.95 -0.25 0.025 0 1.57079632679 0.97079632679</pose>
+      <pose>.79 0.2 0 0 1.57079632679 0</pose>
       <link name='link'>
         <collision name='collision'>
           <geometry>
