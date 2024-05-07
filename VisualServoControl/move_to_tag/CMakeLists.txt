@@ -160,7 +160,9 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/vision.py
-  scripts/visual_servoing.py
+  scripts/ibvs.py
+  scripts/navigation.py
+  scripts/control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

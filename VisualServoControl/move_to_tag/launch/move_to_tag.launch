@@ -1,19 +1,37 @@
 <?xml version="1.0"?>
 <launch>
+        <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] [${node}]: ${message}"/>
         <!-- Launch simulation environment -->
         <arg name="world_file" default="$(find move_to_tag)/worlds/world.world"/>
-        <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(arg world_file)" output="screen"/>
+        <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(arg world_file)"/>
 
-        <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include>
-        
+        <!-- <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include> -->
+        <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>  
+        <node   pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="chassis_joint"
+                args="0  0  0.5  0  0  0   base_link   chassis"/>
+        <node   pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="leftWheel"
+                args="0.0525 0.103 0.0  0  0  0   chassis    wl_link"/>
+        <node   pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="rightWheel"
+                args="0.0525 -0.103 0.0 0  0  0   chassis   wr_link"/>
+        <node   pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="camera_joint"
+                args="0.1 0.0 0.04  -1.57079632679 0 -1.57079632679   chassis   camera_link"/>
+
         <!-- Load config file for nodes parameter configuration -->
         <rosparam file="$(find move_to_tag)/config/config.yaml" command="load" />
 
         <node pkg="move_to_tag" type="vision.py" name="vision" output="screen"/>
-        <node pkg="move_to_tag" type="visual_servoing.py" name="visual_servoing" output="screen"/>
-
-        <!-- <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
+        <node pkg="move_to_tag" type="navigation.py" name="navigation" output="screen"/>
+        <node pkg="move_to_tag" type="control.py" name="pose_controller" output="screen"/>
+        <node pkg="move_to_tag" type="ibvs.py" name="ibvs_controller" output="screen"/>
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
-        <node pkg="puzzlebot_control" type="control.py" name="control" output="screen"/> -->
+        <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
 
 </launch>

@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <robot name="Puzzlebot Jetson-Lidar Ed.">
 
-
     <link name="base_link"></link>
 
     <!-- Chassis Joint -->
@@ -73,7 +72,7 @@
     <joint name="camera_joint" type="fixed">
         <parent link="chassis"/>
         <child link="camera_link"/>
-        <origin xyz="0.1 0.0 0.04" rpy="-1.75079632679 0 -1.57079632679"/>
+        <origin xyz="0.1 0.0 0.04" rpy="-1.57079632679 0 -1.57079632679"/>
     </joint>
 
     <!-- Camera Link -->
@@ -86,18 +85,18 @@
         </visual>
     </link>
 
-    <joint name="object" type="fixed">
-        <origin xyz="0.0 0.0 50.0" rpy="0 0.0 0.0"/>
+    <joint name="aruco_joint" type="fixed">
+        <origin xyz="0.0 0.0 50.0" rpy="0.0 0.0 0.0"/>
         <parent link="base_link"/>
-        <child link="object"/>
+        <child link="aruco_box"/>
         <axis xyz="0 1 0"/>
     </joint>
 
-    <link name="object">
+    <link name="aruco_box">
         <visual>
-            <origin xyz="-0.02 0.02 -0.02" rpy = "0 0 0"/>
+            <origin xyz="-0.025 0.025 -0.025" rpy = "0 0 0"/>
             <geometry>
-                <mesh filename="package://rviz_simulation/models/cube.stl" scale="0.002 0.002 0.002"/>
+                <mesh filename="package://rviz_simulation/models/cube.stl" scale="0.0025 0.0025 0.0025"/>
             </geometry>
         </visual>
     </link>

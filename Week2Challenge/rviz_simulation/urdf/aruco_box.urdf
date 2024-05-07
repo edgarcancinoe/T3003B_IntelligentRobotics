@@ -1,6 +1,6 @@
 <!-- 
-<robot name="cube">
-  <link name="object">
+<robot name="aruco_box">
+  <link name="aruco_box">
     <contact>
       <lateral_friction value="1.0"/>
       <rolling_friction value="0.0"/>

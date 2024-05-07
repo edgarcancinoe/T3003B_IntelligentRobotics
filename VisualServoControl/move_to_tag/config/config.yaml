@@ -1,9 +1,10 @@
 
 camera_frame: 'camera_link'
-object_frame: 'object_link'
-camera_topic: 'puzzlebot/camera/image_raw'
-target_id: 4
-
+object_frame: 'aruco_box'
+robot_frame: 'base_link'
+inertial_frame: 'odom'
+target_id: 8
+aruco_size: 0.048
 desired_corner_locations: [[381., 435.], 
                             [243., 435.], 
                             [240., 301.], 
@@ -12,23 +13,47 @@ desired_corner_locations: [[381., 435.],
 z_desired: 0.18
 
 focal_length_pixel: 530.466941
+
 camera_matrix: [[530.466941, 0, 205], 
                 [0, 530.466941, 154], 
                 [0, 0, 1]]
 
 distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
 
-visual_controller_topic: '/corners'
-control_rate: 30
+target_detection_topic: '/corners'
+ibvs_activate_topic: '/ibvs_activate'
+pose_control_activate_topic: '/pose_control_activate'
+pose_controller_topic: '/goal_point'
+camera_topic: '/puzzlebot/camera/image_raw'
+unlock_topic: '/unlock'
+control_rate: 50
+navigator_rate: 50
+commands_topic: '/puzzlebot/cmd_vel'
+odometry_topic: '/puzzlebot/odom'
 
-visual_servoing:
+pose_controller:
   # Proportional controller
-  kp: 0.6
+  kp_V: 0.3
+  kp_w: 0.12
+  # Integral controller
+  ki_V: 0.008
+  ki_w: 0.008
+  # Derivative controller
+  kd_V: 0.05
+  kd_w: 0.05
 
   # Tolerances
-  e_tolerance: 1
+  d_tolerance: 0.005
+  rad_tolerance: 0.005
   
-  commands_topic: '/puzzlebot/cmd_vel'
+ibvs_controller:
+  # Proportional controller
+  kp: 0.44
+
+  # Tolerances
+  e_tolerance: 30
+
+
 
 # kmodel_rate: 50
 # odom_rate: 50
@@ -36,7 +61,6 @@ visual_servoing:
 # wheel_radius: 0.05
 # track_length: 0.19
 # inertial_frame_name: 'odom'
-# robot_frame_name: 'base_link'
 # commands_topic: 'cmd_vel'
 # pose_topic: 'pose'
 # wl_topic: 'wl'

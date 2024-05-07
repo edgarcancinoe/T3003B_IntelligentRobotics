@@ -20,7 +20,7 @@ class PuzzlebotKinematicModel():
 
     def __init__(self, inertial_frame: str, 
                  x: float, y:float, theta:float, 
-                 r:float, l:float, 
+                 r:float, l:float, damping_factor: float,
                  pose_topic: str, wl_topic: str, wr_topic: str, commands_topic: str,
                  sim_rate: float) -> None:
         
@@ -31,6 +31,9 @@ class PuzzlebotKinematicModel():
         self.r = r
         self.l = l
 
+        self.damping_factor = 0.1
+        self.damping_factor = 0.1
+
         # Initialize PoseStamped object to keep track of pose (position Z is non-mutable)
         self.s: Pose = Pose(position = Point(x = x, y = y, z = 0.0), orientation = Quaternion(x = 0.0, y = 0.0, z = theta, w = 1.0))
 
@@ -39,12 +42,15 @@ class PuzzlebotKinematicModel():
         self.w = 0.0
         
         # Control to wheel velocities matrix
-        self.u2w_mat_inv = np.linalg.inv(np.array([[self.r/2.0, self.r/2.0], [self.r/(2.0 * self.l), -self.r/(2.0 * self.l)]]))
+        self.u2w_mat_inv = np.linalg.inv(np.array([[self.r/2.0, self.r/2.0], 
+                                                   [self.r/(self.l), -self.r/(self.l)]]))
         
         # Subscriber to commands_topic
+        rospy.logwarn('Subscribing to ' + commands_topic + ' topic for commands (kinematic model)')
         rospy.Subscriber(commands_topic, Twist, self.cmd_vel_callback)
     
         # Publishers
+        rospy.logwarn('Publishing to ' + pose_topic + ' topic for estimated pose (kinematic model)')
         self.pose_publisher = rospy.Publisher(pose_topic, PoseStamped, queue_size=10)
         self.w_l_publisher = rospy.Publisher(wl_topic, Float32, queue_size=10)
         self.w_r_publisher = rospy.Publisher(wr_topic, Float32, queue_size=10)
@@ -73,7 +79,7 @@ class PuzzlebotKinematicModel():
 
         J = np.array([[self.r * cos_theta / 2.0, self.r * cos_theta / 2.0], 
                       [self.r * sin_theta / 2.0, self.r * sin_theta / 2.0], 
-                      [self.r / (2.0 * self.l), -self.r / (2.0 * self.l)]])
+                      [self.r / (self.l), -self.r / (self.l)]])
         
         return np.dot(J, np.array([wr, wl]))
     
@@ -115,8 +121,9 @@ class PuzzlebotKinematicModel():
         self.w_r_publisher.publish(wr)
 
         # Reset velocities
-        self.V = 0.0
-        self.w = 0.0
+        self.V = self.V * (1 - self.damping_factor)
+        self.w = self.w * (1 - self.damping_factor)
+
         self.listening = True
 
 if __name__ == '__main__':
@@ -131,6 +138,7 @@ if __name__ == '__main__':
                                     y=params['starting_state']['y'], 
                                     theta=params['starting_state']['theta'], 
                                     r=params['wheel_radius'], l=params['track_length'],
+                                    damping_factor=params['damping'],
                                     pose_topic=params['pose_topic'],
                                     wl_topic=params['wl_topic'],
                                     wr_topic=params['wr_topic'],

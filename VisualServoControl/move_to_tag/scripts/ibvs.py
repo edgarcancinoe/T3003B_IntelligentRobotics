@@ -2,14 +2,15 @@
 
 import rospy
 import numpy as np
-from std_msgs.msg import Header
-from geometry_msgs.msg import Vector3, Vector3Stamped, Twist, Quaternion, QuaternionStamped, Polygon, Point
+from std_msgs.msg import Bool
+from geometry_msgs.msg import Vector3, Twist, Polygon
 import tf
 import tf.transformations as tft
 import math
 class Puzzlebot_Visual_Controller():
     def __init__(self, kp, desired_corner_locations, z_desired, focal_length_pixel,
-                 error_tolerance, commands_topic, input_topic, control_rate):
+                 error_tolerance, commands_topic, input_topic, ibvs_activate_topic, 
+                 send_done_topic, control_rate, robot_frame, camera_frame):
 
         # Proportional controller gains
         self.kp = kp
@@ -30,14 +31,34 @@ class Puzzlebot_Visual_Controller():
 
         # Publishers
         self.cmd_vel_publisher = rospy.Publisher(commands_topic, Twist, queue_size=10)
+        self.reached_goal_publisher = rospy.Publisher(send_done_topic, Bool, queue_size=10)
 
         # Suscribers
         rospy.Subscriber(input_topic, Polygon, self.vision_callback)
+        rospy.Subscriber(ibvs_activate_topic, Bool, self._activate_controller)
+
         self.tf_listener = tf.TransformListener()
         
+        # Transformation stuff
+        self.tf_listener.waitForTransform(camera_frame, robot_frame, rospy.Time(0), rospy.Duration(4.0))
+        tvec, rvec = self.tf_listener.lookupTransform(camera_frame, robot_frame, rospy.Time(0))
+        R_r_c = tft.quaternion_matrix([rvec[0], rvec[1], rvec[2], rvec[3]])[:3, :3]
+    
+        skew_symm_t = np.array([[0, -tvec[2], tvec[1]],
+                                [tvec[2], 0, -tvec[0]],
+                                [-tvec[1], tvec[0], 0]])  
+        
+        self.V_r_c_inv = np.linalg.inv(np.concatenate([np.concatenate([R_r_c, skew_symm_t @ R_r_c], axis=1),
+                                     np.concatenate([np.zeros((3, 3)), R_r_c], axis=1)], axis=0))
+        
+        self.active = False
+
         rospy.Timer(rospy.Duration(1.0/control_rate), self.compute_output)    
         self.no_target_on_sight = True
     
+    def _activate_controller(self, msg):
+        self.active = msg.data
+
     def _compute_errors(self) -> np.ndarray: # Should return a nx1 array n = 8
         # Compute errors
         e = self.p_desired - self.p
@@ -83,7 +104,7 @@ class Puzzlebot_Visual_Controller():
         siny_cosp = 2 * (w * z + x * y)
         cosy_cosp = 1 - 2 * (y * y + z * z)
         yaw = math.atan2(siny_cosp, cosy_cosp)
-        print((roll, pitch, yaw))
+
         return (roll, pitch, yaw)
 
     def vision_callback(self, msg):
@@ -93,7 +114,8 @@ class Puzzlebot_Visual_Controller():
         self.z_values = [point.z for point in msg.points]
 
     def compute_output(self, _):
-        
+        if not self.active:
+            return
         # Control output initialization
         twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
                             angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
@@ -102,9 +124,9 @@ class Puzzlebot_Visual_Controller():
         flag = False
         if self.p is not None:
             e = self._compute_errors()
-            print(np.linalg.norm(e))
             if np.linalg.norm(e) <= self.error_tolerance:
                 rospy.logwarn('Goal reached')
+
             else:
                 # Compute cameras desired velocity for state s: [v*_x, v*_y, w*] (CAMERA FRAME)
                 u = [self.p[0], self.p[2], self.p[4], self.p[6]]
@@ -113,36 +135,16 @@ class Puzzlebot_Visual_Controller():
                 s_dot = self.kp * self._inv_jacobian_matrix(u, v, self.z_values) @ e # 2x1 array [v_z, w_y] in camera frame
                 
                 # Compute the desired linear and angular velocities in the robot frame
-                """
-                header = Header(stamp=rospy.Time(0), frame_id='/camera_link')
-                
-                # Express rotation as quaternion
-                quat = self.euler_to_quaternion(0.0, s_dot[1], 0.0)
-                position = [0.0, 0.0, s_dot[0]]
+                xi_dot_c = np.array([0.0, 0.0, s_dot[0], 0.0, s_dot[1], 0.0])
+                xi_dot_r = self.V_r_c_inv @ xi_dot_c
 
-                # Get transformation matrix
-                transformMatrix = self.tf_listener.asMatrix('/base_link', header)
+                # TODO: get w* in the robot frame
 
-                # Compute the pose as a matrix
-                position_as_matrix = tft.translation_matrix(position)
-                rotation_as_matrix = tft.quaternion_matrix(quat)
-                pose_as_matrix = np.dot(position_as_matrix, rotation_as_matrix)
-                pose_target_frame = np.dot(transformMatrix, pose_as_matrix)
+                twist_msg.linear.x = xi_dot_r[0] 
+                twist_msg.angular.z = xi_dot_r[5]  * 2.8 
 
-                pos_target_frame = Point(*tuple(tft.translation_from_matrix(pose_target_frame))[:3])
-                ortn_target_frame = Quaternion(*tuple(tft.quaternion_from_matrix(pose_target_frame)))
-              
-                # Compute the desired linear and angular velocities 
-                # twist_msg.linear.x = s_dot[0]
-                # twist_msg.angular.z = -self._quaternion_to_euler(ortn_target_frame.x, ortn_target_frame.y, ortn_target_frame.z, ortn_target_frame.w)[2]
-                """
-                twist_msg.linear.x = s_dot[0]
-                twist_msg.angular.z = -s_dot[1]*1.8
-                
                 self.no_target_on_sight = False
                 flag = True
-            print()
-            
         
         if not flag and not self.no_target_on_sight:
             self.cmd_vel_publisher.publish(twist_msg)
@@ -155,19 +157,21 @@ class Puzzlebot_Visual_Controller():
 
 if __name__=='__main__':
     # Initialise and Setup node
-    rospy.init_node("visual_servoing")
+    rospy.init_node("ibvs_controller")
 
     # Get Global ROS parameters
-    input_topic = rospy.get_param('/visual_controller_topic')
-    commands_topic = rospy.get_param('~commands_topic')
+    ibvs_feed_topic = rospy.get_param('/target_detection_topic')
+    ibvs_activate_topic = rospy.get_param('/ibvs_activate_topic')
+    commands_topic = rospy.get_param('/commands_topic')
     z_desired = rospy.get_param('/z_desired')
     focal_length_pixel = rospy.get_param('/focal_length_pixel')
     desired_corner_locations = np.array([rospy.get_param('/desired_corner_locations')])
     control_rate = rospy.get_param('/control_rate')
-
+    robot_frame = rospy.get_param('/robot_frame')
+    camera_frame = rospy.get_param('/camera_frame')
     kp = rospy.get_param('~kp')
     e_tolerance = rospy.get_param('~e_tolerance')
-
+    send_done_topic = rospy.get_param('/unlock_topic', 'unlock')
     # Initialize controller
     puzzlebot_controller = Puzzlebot_Visual_Controller(kp=kp, 
                                                         desired_corner_locations = desired_corner_locations,
@@ -175,8 +179,12 @@ if __name__=='__main__':
                                                         focal_length_pixel=focal_length_pixel,
                                                         error_tolerance = e_tolerance, 
                                                         commands_topic = commands_topic, 
-                                                        input_topic = input_topic, 
-                                                        control_rate = control_rate)
+                                                        input_topic = ibvs_feed_topic,
+                                                        ibvs_activate_topic = ibvs_activate_topic,
+                                                        control_rate = control_rate, 
+                                                        send_done_topic = send_done_topic,
+                                                        robot_frame = robot_frame, 
+                                                        camera_frame = camera_frame)
     
     try:
         rospy.loginfo('The controller node is Running')

@@ -31,14 +31,17 @@ class Locater():
         self.wl = 0.0
         
         self.decodematrix = np.array([[self.r / 2.0, self.r / 2.0], 
-                                      [self.r / (2*self.l), - self.r / (2*self.l)]])
+                                      [self.r / (self.l), - self.r / (self.l)]])
 
         # Publisher
-        self.odom_publisher = rospy.Publisher('/' + odometry_topic, Odometry, queue_size=10)
+        rospy.logwarn('Publishing to ' + odometry_topic + ' topic for estimated pose (DR odometry)')
+        self.odom_publisher = rospy.Publisher(odometry_topic, Odometry, queue_size=10)
 
-        # wl wr Suscriber
+        # wl wr Subscriber
+        rospy.logwarn('Subscribing to /wl and /wr topics for wheel velocities')
         wlsub = message_filters.Subscriber(params['wl_topic'], Float32)
         wrsub = message_filters.Subscriber(params['wr_topic'], Float32)
+
         # Synchronizer
         ts = message_filters.ApproximateTimeSynchronizer([wlsub, wrsub], queue_size=10, slop=1.0/odom_rate, allow_headerless=True)
         ts.registerCallback(self._w_callback)
@@ -95,7 +98,6 @@ class Locater():
     
 
     def step(self, _):
-        
         dt = self._get_dt()
 
         # Integration
