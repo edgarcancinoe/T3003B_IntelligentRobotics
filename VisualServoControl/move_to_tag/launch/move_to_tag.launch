@@ -28,10 +28,10 @@
         <rosparam file="$(find move_to_tag)/config/config.yaml" command="load" />
 
         <node pkg="move_to_tag" type="vision.py" name="vision" output="screen"/>
-        <node pkg="move_to_tag" type="navigation.py" name="navigation" output="screen"/>
-        <node pkg="move_to_tag" type="control.py" name="pose_controller" output="screen"/>
-        <node pkg="move_to_tag" type="ibvs.py" name="ibvs_controller" output="screen"/>
-        <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
         <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
-
+        <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
+        <node pkg="move_to_tag" type="pose_controller.py" name="pose_controller" output="screen"/>
+        <node pkg="move_to_tag" type="orientation_controller.py" name="orientation_controller" output="screen"/>
+        <node pkg="move_to_tag" type="ibvs.py" name="ibvs_controller" output="screen"/>
+        <node pkg="move_to_tag" type="navigation.py" name="navigation" output="screen"/>
 </launch>

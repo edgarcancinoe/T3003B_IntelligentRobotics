@@ -42,6 +42,7 @@ class Puzzlebot_controller():
         self.d_tolerance : float = d_tolerance
         
         # Publishers
+        rospy.logwarn('Publishing to ' + commands_topic + ' topic for commands (kinematic model)')
         self.cmd_vel_publisher = rospy.Publisher('/' + commands_topic, Twist, queue_size=10)
         self.error_publisher = rospy.Publisher('/errors', Twist, queue_size=10)
         self.ref_publisher = rospy.Publisher('/ref', Twist, queue_size=10)
@@ -107,6 +108,7 @@ class Puzzlebot_controller():
         e_x = self.s_d.x - self.s.position.x
         e_y = self.s_d.y - self.s.position.y
         # Distance error
+
         e_l = np.sqrt((e_x * e_x) + (e_y * e_y))
         
         # Angular reference

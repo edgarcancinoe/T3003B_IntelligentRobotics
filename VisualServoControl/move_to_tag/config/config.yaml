@@ -23,37 +23,40 @@ distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
 target_detection_topic: '/corners'
 ibvs_activate_topic: '/ibvs_activate'
 pose_control_activate_topic: '/pose_control_activate'
+orientation_control_activate_topic: '/orientation_control_activate'
 pose_controller_topic: '/goal_point'
+orientation_controller_topic: '/orientation_goals'
 camera_topic: '/puzzlebot/camera/image_raw'
 unlock_topic: '/unlock'
 control_rate: 50
 navigator_rate: 50
 commands_topic: '/puzzlebot/cmd_vel'
 odometry_topic: '/puzzlebot/odom'
-
+sim_odom_topic: '/puzzlebot/gazebo_odom'
 pose_controller:
-  # Proportional controller
-  kp_V: 0.3
-  kp_w: 0.12
-  # Integral controller
-  ki_V: 0.008
-  ki_w: 0.008
-  # Derivative controller
-  kd_V: 0.05
-  kd_w: 0.05
+  odom_topic: '/puzzlebot/gazebo_odom'
+
+  # Control parameters
+  k1: .5
+  k2: 7
+  beta: 0.8
+  lambda_: 1.0
+  v_max: 0.15
 
   # Tolerances
-  d_tolerance: 0.005
-  rad_tolerance: 0.005
+  r_tolerance: 0.04
   
 ibvs_controller:
   # Proportional controller
   kp: 0.44
-
   # Tolerances
   e_tolerance: 30
 
-
+orientation_controller:
+  odom_topic: '/puzzlebot/gazebo_odom'
+  kp: 0.05
+  ki: 0.002
+  e_tolerance: 0.01
 
 # kmodel_rate: 50
 # odom_rate: 50

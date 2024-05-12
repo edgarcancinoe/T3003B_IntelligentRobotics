@@ -109,7 +109,6 @@ class ArucoDetector:
                 median_tvec = np.median([pos[0] for pos in self.target_positions], axis=0)
                 median_rvec = np.median([pos[1] for pos in self.target_positions], axis=0)
                 median_quat = tft.quaternion_from_euler(median_rvec[0], median_rvec[1], median_rvec[2])
-                print(median_tvec, median_rvec)
 
                 # Get target's pose in inertial frame
                 tvec_inertial = self.tf_listener.transformPoint(self.inertial_frame_id, 
@@ -168,6 +167,6 @@ if __name__ == '__main__':
         rospy.spin()
 
     except KeyboardInterrupt:
-        print("Shutting down")
+        rospy.logerr("Shutting down")
 
     cv2.destroyAllWindows()

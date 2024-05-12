@@ -86,6 +86,7 @@ class Locater():
     def _w_callback(self, wl, wr):
         if self.listening:
             self.v, self.w = np.dot(self.decodematrix, np.array([wr.data, wl.data]).T).flatten()
+            # print('V,W Odom', self.v, self.w)
             self.wl = wl.data
             self.wr = wr.data
             self.listening = False
@@ -105,7 +106,6 @@ class Locater():
         self.sx += delta[0]
         self.sy += delta[1]
         self.stheta += delta[2]
-
         # Publish new state data
         self._publishOdom()
         

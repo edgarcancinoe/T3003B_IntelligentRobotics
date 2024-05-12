@@ -162,7 +162,8 @@ catkin_install_python(PROGRAMS
   scripts/vision.py
   scripts/ibvs.py
   scripts/navigation.py
-  scripts/control.py
+  scripts/pose_controller.py
+  scripts/orientation_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
