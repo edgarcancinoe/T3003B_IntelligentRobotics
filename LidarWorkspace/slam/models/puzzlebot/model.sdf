@@ -1,0 +1,396 @@
+<?xml version='1.0'?>
+  <sdf version='1.6'>
+    <model name="puzzlebot">
+      <static>false</static>
+      <link name='base_link'>
+        <pose>0 0 0 0 0 0</pose>
+      </link>
+      <joint name="base_joint" type="fixed">
+        <child>chassis</child>
+        <parent>base_link</parent>
+      </joint>
+      <link name='chassis'>
+        <pose>-0.025 0 0.05 1.57079632679 0 1.57079632679</pose>
+          <collision name='collision'>
+            <geometry>
+              <box>
+                <size>.16 .075 .25</size>
+              </box>
+            </geometry>
+            <surface>
+            <contact>
+              <ode>
+                <min_depth>0.01</min_depth>
+                <max_vel>0.1</max_vel>
+              </ode>
+            </contact>
+          </surface>
+          </collision>
+
+          <inertial>
+            <inertia>
+              <ixx>0.056770833333333335 </ixx>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyy>0.026020833333333334</iyy>
+              <iyz>0</iyz>
+              <izz>0.073416666666666665</izz>
+            </inertia>
+            <mass>0.03</mass>
+          </inertial>
+
+          <visual name='visual'>
+            <geometry>
+            <mesh>
+            <uri>/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/Week2Challenge/rviz_simulation/models/MCR2_1000_13_Chassis.stl</uri>
+            </mesh>
+          </geometry>
+          </visual>
+      </link>
+
+      <joint name="caster_joint" type="fixed">
+        <child>caster</child>
+        <parent>chassis</parent>
+      </joint>
+
+      <link name="caster">
+        <pose>0 0 0.05 0 0 0</pose>
+        <collision name='caster_collision'>
+          <pose>-0.12 0 0 0 0 0</pose>
+            <geometry>
+              <sphere>
+              <radius>.047</radius>
+            </sphere>
+          </geometry>
+
+          <surface>
+            <bounce>
+              <restitution_coefficient>0.0000000001</restitution_coefficient>
+              <threshold>100.0</threshold>
+            </bounce>
+            <surface>
+            <contact>
+              <ode>
+                <min_depth>0.01</min_depth>
+                <max_vel>0.1</max_vel>
+              </ode>
+            </contact>
+          </surface>
+            <friction>
+              <ode>
+                <mu>0.02</mu>
+                <mu2>0.02</mu2>
+                <slip1>1.0</slip1>
+                <slip2>1.0</slip2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        
+        <inertial>
+          <inertia>
+            <ixx>0.009025</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.009025</iyy>
+            <iyz>0</iyz>
+            <izz>0.009025</izz>
+          </inertia>
+          <mass>10</mass>
+        </inertial>
+        
+        <!-- <visual name='caster_visual'>
+          <pose>-0.1 0 0 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>.0475</radius>
+            </sphere>
+          </geometry>
+        </visual> -->
+      </link>
+
+      
+      <link name="wl_link">
+        <pose>0.0275 0.1 0.05 1.57079632679 0 0</pose>
+        <velocity_decay>
+          <!-- <linear>0.01</linear>
+          <angular>0.01</angular> -->
+        </velocity_decay>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>.05</radius>
+              <length>.01</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>0.63</mu>
+                <mu2>0.63</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <inertial>
+          <inertia>
+            <ixx>0.0012666667</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0012666667</iyy>
+            <iyz>0</iyz>
+            <izz>0.0025</izz>
+            <!-- <ixx>0.0</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0</iyy>
+            <iyz>0</iyz>
+            <izz>0.0</izz> -->
+          </inertia>
+          <mass>0.02</mass>
+        </inertial>
+         <visual name="visual">
+          <geometry>
+          <mesh>
+            <uri>/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/Week2Challenge/rviz_simulation/models/MCR2_1000_1_1_Wheel_Coupler_2.stl</uri>
+          </mesh>
+        </geometry>
+        </visual>
+      </link>
+
+      <link name="wr_link">
+        <pose>0.0275 -0.1 0.05 -1.57079632679 0 0</pose>
+        <velocity_decay>
+          <!-- <linear>0.01</linear>
+          <angular>0.01</angular> -->
+        </velocity_decay>
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>.05</radius>
+              <length>.01</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+            <friction>
+              <ode>
+                <mu>0.63</mu>
+                <mu2>0.63</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <inertial>
+          <inertia>
+            <ixx>0.0012666667</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0012666667</iyy>
+            <iyz>0</iyz>
+            <izz>0.0025</izz>
+            <!-- <ixx>0.0</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0</iyy>
+            <iyz>0</iyz>
+            <izz>0.0</izz> -->
+          </inertia>  
+          <mass>0.02</mass>
+        </inertial>
+        <visual name="visual">
+         <geometry>
+          <mesh>
+            <uri>/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/Week2Challenge/rviz_simulation/models/MCR2_1000_1_1_Wheel_Coupler_2.stl</uri>
+          </mesh>
+        </geometry>
+        </visual>
+      </link>
+
+
+      <joint type="revolute" name="leftWheel">
+        <pose>0 0 -0.03 0 0 0</pose>
+        <child>wl_link</child>
+        <parent>chassis</parent>
+        <axis>
+          <xyz>0 0 -1</xyz>
+          <dynamics>
+            <damping>0.1</damping>
+          </dynamics>
+        </axis>
+      </joint>
+
+      <joint type="revolute" name="rightWheel">
+        <pose>0 0 0.03 0 0 0</pose>
+        <child>wr_link</child>
+        <parent>chassis</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <dynamics>
+            <damping>0.1</damping>
+          </dynamics>
+        </axis>
+      </joint>
+    
+    <joint name="camera_joint" type="fixed">
+        <child>camera_link</child>
+        <parent>chassis</parent>
+    </joint>
+
+    <link name="camera_link">
+        <pose>0.075 0 0.09 1.75079632679 0 1.57079632679</pose>
+        <visual name="visual">
+            <geometry>
+            <mesh>
+              <uri>/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/Week2Challenge/rviz_simulation/models/camera.stl</uri>
+            </mesh>
+            </geometry>
+        </visual>
+    </link>
+
+    <joint name="camera_lens_joint" type="fixed">
+        <child>camera_lens_link</child>
+        <parent>camera_link</parent>
+    </joint>
+    <link name="camera_lens_link">
+      <pose> 0.075 0 0.09 0 0.18 0</pose>
+      <sensor name="camera" type="camera">
+            <camera name="__default__">
+              <horizontal_fov>1.0856</horizontal_fov>
+              <image>
+                <width>640</width>
+                <height>480</height>
+                <format>R8G8B8</format>
+              </image>
+              <clip>
+                <near>0.025</near>
+                <far>300</far>
+              </clip>
+              
+              <lens>
+                <intrinsics>
+                  <fx>530.466941</fx>
+                  <fy>530.466941</fy>
+                  <cx>205</cx>
+                  <cy>154</cy>
+                </intrinsics>
+              </lens>
+            </camera>
+
+            <always_on>1</always_on>
+            <visualize>true </visualize>
+            <update_rate>30</update_rate>
+
+  	   	    <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+                <always_on>1</always_on>
+                <cameraName>puzzlebot/camera</cameraName>
+                <imageTopicName>image_raw</imageTopicName>
+                <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+			          <frameName>camera_link_optical</frameName>
+    			      <updateRate>0.0</updateRate>
+    			      <!-- <hackBaseline>0.07</hackBaseline> -->
+                <Cx>205</Cx>
+    			      <Cy>154</Cy>
+    			      <focalLength>530.466941 </focalLength>
+                <distortionK1>0.0</distortionK1>
+                <distortionK2>0.0</distortionK2>
+                <distortionK3>0.0</distortionK3>
+                <distortionT1>0.0</distortionT1>
+                <distortionT2>0.0</distortionT2>
+            </plugin>
+        </sensor>
+    </link>
+
+    <joint name="lidar_joint" type="fixed">
+      <parent>chassis</parent>
+      <child>lidar_link</child>
+    </joint>
+    
+    <link name="lidar_link">
+      <pose>0.025 0 0.133 0 0 0</pose>
+      <visual name="lidar_visual">
+        <geometry>
+          <cylinder>
+            <radius>0.0275</radius>
+            <length>0.03</length>
+          </cylinder>
+        </geometry> 
+      </visual>
+      <collision name="lidar_collision">
+        <geometry>
+          <cylinder>
+            <radius>0.0275</radius>
+            <length>0.03</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <sensor name="lidar" type="ray">
+          <pose>0.0 0.0 0.0</pose>
+          <visualize>true</visualize>
+          <update_rate>10</update_rate>
+          <ray>
+            <scan>
+              <horizontal>
+                <samples>1080</samples>
+                <resolution>1.0</resolution>
+                <min_angle>-3.14159265359</min_angle>
+                <max_angle>3.14159265359</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.3</min>
+              <max>5.0</max>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0.0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+          </ray>
+          <plugin name="laser_controller" filename="libgazebo_ros_laser.so">
+            <topicName>scan</topicName>
+            <frameName>lidar_link</frameName>
+            <laserName>laser</laserName>
+            <alwaysOn>true</alwaysOn>
+          </plugin>
+      </sensor>
+    </link>
+
+    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+
+      <commandTopic>cmd_vel</commandTopic>
+      <updateRate>50</updateRate>
+      <!-- Wheel information -->
+      <leftJoint>leftWheel</leftJoint>
+      <rightJoint>rightWheel</rightJoint>
+      <wheelSeparation>0.19</wheelSeparation>
+      <wheelDiameter>0.1</wheelDiameter>
+
+      <!-- Limits -->
+      <wheelTorque>4</wheelTorque>
+      <wheelAcceleration>1.0</wheelAcceleration>
+
+      <!-- Output -->
+      <odometryFrame>gazebo_odom</odometryFrame>
+      <odometryTopic>gazebo_odom</odometryTopic>
+      <odometrySource>0</odometrySource>
+      
+      <robotBaseFrame>chassis</robotBaseFrame>
+      <publish_odom>true</publish_odom>
+      <publishOdomTF>false</publishOdomTF>
+      <publish_wheel_tf>false</publish_wheel_tf>
+      <publishWheelJointState>true</publishWheelJointState>
+      <legacyMode>false</legacyMode>
+    </plugin>
+    </model>
+  </sdf>
+

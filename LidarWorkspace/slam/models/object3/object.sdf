@@ -1,0 +1,38 @@
+<?xml version='1.0'?>
+  <sdf version='1.6'>
+    <model name="Object3">
+      <static>false</static>
+
+      <link name='cube'>
+        <pose>0.2 1.34 0.25 0 0 0</pose>
+        
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>.5 .5 .5</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <slip1>1.0</slip1>
+              <slip2>1.0</slip2>
+            </ode>
+          </friction>
+        </surface>
+
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>.5 .5 .5</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+
+    </model>
+  </sdf>
