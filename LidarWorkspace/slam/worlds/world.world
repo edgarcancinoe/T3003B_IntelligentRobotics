@@ -26,6 +26,10 @@
       <uri>model://object4</uri>
     </include>
     <include>
+      <uri>model://object5</uri>
+    </include>
+
+    <include>
       <uri>model://puzzlebot</uri>
     </include>
     

@@ -1,15 +1,15 @@
 <?xml version='1.0'?>
   <sdf version='1.6'>
-    <model name="Object4">
+    <model name="Object5">
       <static>false</static>
 
       <link name='cube'>
-        <pose>-.3 -1.04 0.4 0 0 -0.8</pose>
+        <pose>1.8 1.14 0.7 0 0 0.45</pose>
         
         <collision name='collision'>
           <geometry>
             <box>
-              <size>.3 .2 .8</size>
+              <size>.2 .42 1.4</size>
             </box>
           </geometry>
         </collision>
@@ -28,7 +28,7 @@
         <visual name='visual'>
           <geometry>
             <box>
-              <size>.3 .2 .8</size>
+              <size>.2 .42 1.4</size>
             </box>
           </geometry>
         </visual>
