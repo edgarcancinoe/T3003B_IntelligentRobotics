@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Twist, PoseStamped, Point, Pose, Quaternion
 from puzzlebot_util.util import *
-
+import tf.transformations as tft
 class PuzzlebotKinematicModel():
     """
         This class listens to a command topic receiving [V w] instructions to move the 
@@ -31,11 +31,9 @@ class PuzzlebotKinematicModel():
         self.r = r
         self.l = l
 
-        self.damping_factor = 0.1
-        self.damping_factor = 0.1
-
+        self.damping_factor = damping_factor
         # Initialize PoseStamped object to keep track of pose (position Z is non-mutable)
-        self.s: Pose = Pose(position = Point(x = x, y = y, z = 0.0), orientation = Quaternion(x = 0.0, y = 0.0, z = theta, w = 1.0))
+        self.s: Pose = Pose(position = Point(x = x, y = y, z = 0.0), orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, theta)))
 
         # Desired velocities (inertial frame)
         self.V = 0.0
@@ -74,6 +72,7 @@ class PuzzlebotKinematicModel():
     
     def _state_gradient(self, theta, wr, wl):
         """ Jacobian matrix"""
+
         cos_theta = np.cos(theta)
         sin_theta = np.sin(theta)
 
@@ -88,9 +87,12 @@ class PuzzlebotKinematicModel():
         if self.listening:
             self.V = msg.linear.x
             self.w = msg.angular.z
-            self.listening = False
+            # self.listening = False
     
-    def _rk_integration(self, dt, state, wr, wl):
+    def _rk_integration(self, state, wr, wl):
+        # Compute dt based on elapsed time
+        dt = self._get_dt()
+
         # Compute RK4 updates
         k1 = self._state_gradient(state[2], wr, wl)
         k2 = self._state_gradient(state[2] + dt*k1[2]/2.0, wr, wl)
@@ -101,28 +103,25 @@ class PuzzlebotKinematicModel():
         return dt * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
         
     def simulate(self, _):
-        # Compute dt based on elapsed time
-        dt = self._get_dt()
 
         wr, wl = np.dot(self.u2w_mat_inv, np.array([self.V, self.w]))
 
         # We capture the system's current state s = [x y theta]
-        curr_s = np.array([self.s.position.x, self.s.position.y, self.s.orientation.z])
+        curr_s = np.array([self.s.position.x, self.s.position.y, tft.euler_from_quaternion([self.s.orientation.x, self.s.orientation.y, self.s.orientation.z, self.s.orientation.w])[2]])
         
-        curr_s = curr_s + self._rk_integration(dt, curr_s, wr, wl)
-        
+        delta = self._rk_integration(curr_s, wr, wl)
+        curr_s = curr_s + delta
+        # print('Current orientation: ', curr_s[2], 'Delta orientation: ', delta[2])
+
         # Update state
         self.s = Pose(position = Point(x = curr_s[0], y = curr_s[1], z = 0.0), 
-                      orientation = Quaternion(x = 0.0, y = 0.0, z = wrap_to_Pi(curr_s[2]), w = 1.0))
+                      orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, curr_s[2])))
 
         # Publish current state
         self.pose_publisher.publish(self._stamp(self.s))
         self.w_l_publisher.publish(wl)
         self.w_r_publisher.publish(wr)
 
-        # Reset velocities
-        self.V = self.V * (1 - self.damping_factor)
-        self.w = self.w * (1 - self.damping_factor)
 
         self.listening = True
 

@@ -6,7 +6,7 @@ from geometry_msgs.msg import Vector3, Point, Quaternion, Pose, Twist, PoseWithC
 from nav_msgs.msg import Odometry
 import numpy as np
 from puzzlebot_util.util import *
-
+import tf.transformations as tft
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
     def __init__(self, odometry_topic, inertial_frame_name, robot_frame_name, 
@@ -29,7 +29,7 @@ class Locater():
         self.w = 0.0
         self.wr = 0.0
         self.wl = 0.0
-        
+
         self.decodematrix = np.array([[self.r / 2.0, self.r / 2.0], 
                                       [self.r / (self.l), - self.r / (self.l)]])
 
@@ -51,10 +51,13 @@ class Locater():
         rospy.Timer(rospy.Duration(1.0/odom_rate), self.step)
         self.last_timestamp = rospy.Time.now()
 
-    def _system_gradient(self, theta, dd, dtheta):
-        return np.array([dd * np.cos(theta), dd * np.sin(theta), dtheta])
+    def _system_gradient(self, theta, dd, w):
+        return np.array([dd * np.cos(theta), 
+                         dd * np.sin(theta), 
+                         w])
     
-    def _rk4_delta(self, dt, theta, dd, dtheta):
+    def _rk4_delta(self, theta, dd, dtheta):
+        dt = self._get_dt()
         k1 = self._system_gradient(theta, dd, dtheta)
         k2 = self._system_gradient(theta + dt*k1[2]/2.0, dd, dtheta)
         k3 = self._system_gradient(theta + dt*k2[2]/2.0, dd, dtheta)
@@ -69,15 +72,15 @@ class Locater():
             pose = PoseWithCovariance(
                 pose = Pose(
                     position = Point(x = self.sx, y = self.sy, z = 0.0),
-                    orientation = Quaternion(x = 0.0, y = 0.0, z = wrap_to_Pi(self.stheta), w = 1.0)
+                    orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, self.stheta))
                 ),
                 covariance = None
             ),
             # Twist in child frame (puzzlebot)
             twist = TwistWithCovariance(
                 twist = Twist(
-                    linear = Vector3(x = self.r * self.wl, y = self.r * self.wr, z = 0.0),
-                    angular = Vector3(x = self.wl, y = self.wr, z = 0.0)
+                    linear = Vector3(x = self.v, y = 0.0, z = 0.0),
+                    angular = Vector3(x = 0.0, y = 0.0, z = self.w)
                 ),
                 covariance = None
             )
@@ -86,10 +89,9 @@ class Locater():
     def _w_callback(self, wl, wr):
         if self.listening:
             self.v, self.w = np.dot(self.decodematrix, np.array([wr.data, wl.data]).T).flatten()
-            # print('V,W Odom', self.v, self.w)
             self.wl = wl.data
             self.wr = wr.data
-            self.listening = False
+            # self.listening = False
 
     def _get_dt(self):
         current_time = rospy.Time.now()
@@ -99,10 +101,9 @@ class Locater():
     
 
     def step(self, _):
-        dt = self._get_dt()
 
         # Integration
-        delta = self._rk4_delta(dt, self.stheta, self.v, self.w)
+        delta = self._rk4_delta(self.stheta, self.v, self.w)
         self.sx += delta[0]
         self.sy += delta[1]
         self.stheta += delta[2]

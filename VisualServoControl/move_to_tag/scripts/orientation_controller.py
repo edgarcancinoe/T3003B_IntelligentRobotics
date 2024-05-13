@@ -87,6 +87,7 @@ class Puzzlebot_orientation_controller():
         return dt
     
     def compute_output(self, _):
+        dt = self._get_dt()
         if not self.active or not self.goal_set() or self.reached_goal or self.starting_yaw == None:
             return
 
@@ -96,7 +97,7 @@ class Puzzlebot_orientation_controller():
         
         e = (target - yaw) if yaw < self.starting_yaw else (target - yaw) % (2*np.pi)
 
-        self.ei += e * self._get_dt()
+        self.ei += e * dt
         if abs(e) < self.e_tolerance:
             rospy.logwarn(f'Goal reached')
             self.reset()

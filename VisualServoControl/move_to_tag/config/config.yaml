@@ -32,9 +32,9 @@ control_rate: 50
 navigator_rate: 50
 commands_topic: '/puzzlebot/cmd_vel'
 odometry_topic: '/puzzlebot/odom'
-sim_odom_topic: '/puzzlebot/gazebo_odom'
+sim_odom_topic: '/puzzlebot/odom'
 pose_controller:
-  odom_topic: '/puzzlebot/gazebo_odom'
+  odom_topic: '/puzzlebot/odom'
 
   # Control parameters
   k1: .5
@@ -53,9 +53,9 @@ ibvs_controller:
   e_tolerance: 30
 
 orientation_controller:
-  odom_topic: '/puzzlebot/gazebo_odom'
-  kp: 0.05
-  ki: 0.002
+  odom_topic: '/puzzlebot/odom'
+  kp: 0.01
+  ki: 0.001
   e_tolerance: 0.01
 
 # kmodel_rate: 50

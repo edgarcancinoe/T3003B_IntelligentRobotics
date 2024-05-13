@@ -4,10 +4,10 @@ odom_rate: 50
 rviz_rate: 50
 wheel_radius: 0.05
 track_length: 0.19
-damping: 0.1
+damping: 0.01
 inertial_frame_name: 'odom'
 robot_frame_name: 'base_link'
-commands_topic: 'cmd_vel'
+commands_topic: 'puzzlebot/cmd_vel'
 pose_topic: 'pose'
 wl_topic: 'wl'
 wr_topic: 'wr'
