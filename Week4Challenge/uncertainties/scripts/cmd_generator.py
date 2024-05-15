@@ -23,9 +23,11 @@ if __name__ == '__main__':
         while not rospy.is_shutdown():
             
 
-            v = v_0 * np.abs(np.sin(t))
+            # v = v_0 * np.abs(np.sin(t))
+            # v = v_0
+            # omega = v / radius 
             v = v_0
-            omega = v / radius         
+            omega = 0.0        
             vel_msg = Twist()
             
             vel_msg.linear.x = v
@@ -34,8 +36,17 @@ if __name__ == '__main__':
             vel_msg.angular.x = 0
             vel_msg.angular.y = 0
             vel_msg.angular.z = omega
-            
             pub.publish(vel_msg)
+            rospy.sleep(5)
+
+
+            omega = 1.570795 / 5
+            vel_msg.linear.x = v/10
+            vel_msg.angular.z = omega
+            pub.publish(vel_msg)
+            rospy.sleep(5)
+
+
             rate.sleep()
             t = t + 1/100
     except rospy.ROSInterruptException:

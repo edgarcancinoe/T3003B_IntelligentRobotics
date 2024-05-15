@@ -11,7 +11,7 @@ import tf.transformations as tft
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
     def __init__(self, odometry_topic, inertial_frame_name, robot_frame_name, 
-                 wheel_radius, track_length, starting_state, odom_rate):
+                 wheel_radius, track_length, starting_state, odom_rate, k_l, k_r):
                 
         self.frame_id = inertial_frame_name
         self.child_frame_id = robot_frame_name
@@ -25,14 +25,13 @@ class Locater():
         self.sy = starting_state['y']
         self.stheta = starting_state['theta']
 
+        # Uncertainty parameters
+        self.k_l = k_l
+        self.k_r = k_r
+
         # Initial covariance matrix
-        self.sigma = np.array([[0.0, 0.0, 0.0],
-                                 [0.0, 0.0, 0.0],
-                                 [0.0, 0.0, 0.0]])
-        
-        self.Q_k = np.array([[0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0]])
+        self.sigma = np.ndarray(shape=(3,3))
+        self.sigma.fill(0.0)
         
         # Velocities (robot frame)
         self.v = 0.0
@@ -71,7 +70,12 @@ class Locater():
                     position = Point(x = self.sx, y = self.sy, z = 0.0),
                     orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, self.stheta))
                 ),
-                covariance = None
+                covariance = np.array([self.sigma[0,0], self.sigma[0,1], 0.0, 0.0, 0.0, self.sigma[0,2],
+                                       self.sigma[1,0], self.sigma[1,1], 0.0, 0.0, 0.0, self.sigma[1,2],
+                                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                       self.sigma[2,0], self.sigma[2,1], 0.0, 0.0, 0.0, self.sigma[2,2]])
             ),
             # Twist in child frame (puzzlebot)
             twist = TwistWithCovariance(
@@ -88,7 +92,7 @@ class Locater():
             self.v, self.w = np.dot(self.decodematrix, np.array([wr.data, wl.data]).T).flatten()
             self.wl = wl.data
             self.wr = wr.data
-            # self.listening = False
+            self.listening = False
 
     def _get_dt(self):
         current_time = rospy.Time.now()
@@ -128,6 +132,24 @@ class Locater():
         deltaX = self._rk4_delta(theta, v, w, dt)
         return np.array([self.sx + deltaX[0], self.sy + deltaX[1], self.stheta + deltaX[2]])
     
+    def _noise_propagation_matrix(self, dt):
+        """
+            Nabla matrix used to propagate the wheel speed noise in the system
+        """
+        return (1/2.0) * self.r * dt * np.array([[np.cos(self.stheta), np.cos(self.stheta)],
+                                                [np.sin(self.stheta), np.sin(self.stheta)],
+                                                [2/self.l, -2/self.l]])
+    
+    def _get_pose_covariance_matrix(self, dt):
+        """
+            Get the process noise covariance matrix
+            Q_k = nabla_k * sigma_delta_k * nabla_k^T
+        """
+        nabla_k = self._noise_propagation_matrix(dt)
+        sigma_delta_k = np.array([[self.k_l * np.abs(self.wr), 0],
+                                 [0, self.k_r * np.abs(self.wl)]])
+        return nabla_k @ sigma_delta_k @ nabla_k.T
+    
     def step(self, _):
         # Get dt
         dt = self._get_dt()
@@ -135,16 +157,17 @@ class Locater():
         miu_k = self._h(self.stheta, self.v, self.w, dt)
         # Calculate the linearised model to be used in the uncertainty propagation
         H_k = self._jacobian(self.stheta, self.v, dt)
+        # Compute Q_k
+        Q_k = self._get_pose_covariance_matrix(dt)
         # Propagate the uncertainty
-        self.sigma = np.dot(np.dot(H_k, self.sigma), H_k.T) + self.Q_k
-        
+        self.sigma = H_k @ self.sigma @ H_k.T + Q_k
+
         # Update the state variables
         self.sx = miu_k[0]
         self.sy = miu_k[1]
         self.stheta = miu_k[2]
 
-        # print(f'Estimated state:     {wrap_to_Pi(self.stheta)}')
-        # Publish new state data
+        # Publish odometry message (pose and uncertainty)
         self._publishOdom()
         
         self.listening = True
@@ -156,9 +179,15 @@ if __name__ == '__main__':
     # Get Global ROS parameters
     params = get_global_params()
 
-    locater = Locater(odometry_topic=params['odometry_topic'], inertial_frame_name=params['inertial_frame_name'],
-                      robot_frame_name=params['robot_frame_name'], wheel_radius=params['wheel_radius'],
-                      track_length=params['track_length'], odom_rate=params['odom_rate'], starting_state=params['starting_state'])
+    locater = Locater(odometry_topic=params['odometry_topic'], 
+                      inertial_frame_name=params['inertial_frame_name'],
+                      robot_frame_name=params['robot_frame_name'], 
+                      wheel_radius=params['wheel_radius'],
+                      track_length=params['track_length'], 
+                      starting_state=params['starting_state'],
+                      odom_rate=params['odom_rate'],
+                      k_l=rospy.get_param('~k_l', 0.0),
+                      k_r=rospy.get_param('~k_r', 0.0))
 
     try:
         rospy.loginfo('Localisation node running')

@@ -2,10 +2,10 @@
 
 import rospy
 import numpy as np
-from std_msgs.msg import Float32
 from geometry_msgs.msg import Vector3, Twist, Point, Pose, Quaternion
 from nav_msgs.msg import Odometry
 from puzzlebot_util.util import *
+import tf.transformations as tft
 
 class Puzzlebot_controller():
     def __init__(self, starting_pose, starting_orientation,
@@ -107,15 +107,15 @@ class Puzzlebot_controller():
         # Position errors
         e_x = self.s_d.x - self.s.position.x
         e_y = self.s_d.y - self.s.position.y
-        # Distance error
 
+        # Distance error
         e_l = np.sqrt((e_x * e_x) + (e_y * e_y))
         
         # Angular reference
         w_d = np.arctan2(e_y, e_x)
         # Angular errror
-        e_w = w_d - self.s.orientation.z
-
+        e_w = w_d - tft.euler_from_quaternion([self.s.orientation.x, self.s.orientation.y, self.s.orientation.z, self.s.orientation.w])[2]
+        
         if np.abs(e_l) < self.d_tolerance:
             e_l = 0.0
         if np.abs(e_w) < self.w_tolerance:

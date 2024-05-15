@@ -5,6 +5,7 @@
 
         <!-- Load config file for nodes parameter configuration -->
         <rosparam file="$(find move_to_tag)/config/config.yaml" command="load" />
+        <rosparam file="$(find uncertainties)/config/config.yaml" command="load" />
 
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
         <node pkg="uncertainties" type="uncertainty_localisation.py" name="uncertainty_localisation" output="screen"/>
