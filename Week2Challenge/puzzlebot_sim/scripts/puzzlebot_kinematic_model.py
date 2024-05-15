@@ -105,17 +105,16 @@ class PuzzlebotKinematicModel():
     def simulate(self, _):
 
         wr, wl = np.dot(self.u2w_mat_inv, np.array([self.V, self.w]))
-
+        
         # We capture the system's current state s = [x y theta]
         curr_s = np.array([self.s.position.x, self.s.position.y, tft.euler_from_quaternion([self.s.orientation.x, self.s.orientation.y, self.s.orientation.z, self.s.orientation.w])[2]])
         
         delta = self._rk_integration(curr_s, wr, wl)
         curr_s = curr_s + delta
-        # print('Current orientation: ', curr_s[2], 'Delta orientation: ', delta[2])
 
         # Update state
         self.s = Pose(position = Point(x = curr_s[0], y = curr_s[1], z = 0.0), 
-                      orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, curr_s[2])))
+                      orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, wrap_to_Pi(curr_s[2]))))
 
         # Publish current state
         self.pose_publisher.publish(self._stamp(self.s))
