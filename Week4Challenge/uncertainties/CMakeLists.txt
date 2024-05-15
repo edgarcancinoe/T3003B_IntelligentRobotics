@@ -169,6 +169,7 @@ scripts/uncertainty_localisation.py
 scripts/orientation_controller.py 
 scripts/pose_controller.py 
 scripts/cmd_generator.py
+scripts/reach_points_commander.py
 DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

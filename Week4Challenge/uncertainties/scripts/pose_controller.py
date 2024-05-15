@@ -57,10 +57,7 @@ class Puzzlebot_controller():
 
     def orientation_as_euler(self, quat):
         euler = tf.euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))
-        # roll = euler[0]
-        # pitch = euler[1]
         yaw = euler[2]
-        # return roll, pitch, yaw
         return yaw
     
     def odometry_callback(self, msg):

@@ -101,7 +101,7 @@ class Puzzlebot_orientation_controller():
         if abs(e) < self.e_tolerance:
             rospy.logwarn(f'Goal reached')
             self.reset()
-            rospy.logwarn(f'Pose controller deactivated')
+            rospy.logwarn(f'Orientation controller deactivated')
             self.active = False
             self.reached_goal_publisher.publish(Bool(True))
             w = 0.0

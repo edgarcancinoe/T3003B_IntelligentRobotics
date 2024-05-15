@@ -4,12 +4,13 @@
         <include file="$(find rviz_simulation)/launch/puzzlebot_rviz.launch"></include>
 
         <!-- Load config file for nodes parameter configuration -->
-        <rosparam file="$(find move_to_tag)/config/config.yaml" command="load" />
         <rosparam file="$(find uncertainties)/config/config.yaml" command="load" />
 
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
         <node pkg="uncertainties" type="uncertainty_localisation.py" name="uncertainty_localisation" output="screen"/>
         <node pkg="uncertainties" type="orientation_controller.py" name="orientation_controller" output="screen"/>
-        <node pkg="uncertainties" type="cmd_generator.py" name="cmd_generator" output="screen"/>
+        <node pkg="uncertainties" type="pose_controller.py" name="pose_controller" output="screen"/>
+        <!-- <node pkg="uncertainties" type="cmd_generator.py" name="cmd_generator" output="screen"/> -->
+        <node pkg="uncertainties" type="reach_points_commander.py" name="reach_points_commander" output="screen"/>
 
 </launch>
