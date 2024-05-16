@@ -33,29 +33,34 @@ navigator_rate: 50
 commands_topic: '/puzzlebot/cmd_vel'
 odometry_topic: '/puzzlebot/odom'
 sim_odom_topic: '/puzzlebot/odom'
+
+# Will use the minimum of the two /max_v and /pose_controller/v_max
+max_v: 0.22
+max_w: 0.22
+
 pose_controller:
   odom_topic: '/puzzlebot/odom'
 
   # Control parameters
-  k1: .5
-  k2: 7
+  k1: 2
+  k2: 8
   beta: 0.8
-  lambda_: 1.0
-  v_max: 0.18
+  lambda_: 1.05
+  v_max: 0.25
 
   # Tolerances
   r_tolerance: 0.0015
   
 ibvs_controller:
   # Proportional controller
-  kp: 0.44
+  kp: 0.3
   # Tolerances
   e_tolerance: 30
 
 orientation_controller:
   odom_topic: '/puzzlebot/odom'
-  kp: 0.3
-  ki: 0.001
+  kp: 0.18
+  ki: 0.002
   e_tolerance: 0.005
 
 uncertainty_localisation:

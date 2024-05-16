@@ -9,6 +9,6 @@
         <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
         <!-- <node pkg="puzzlebot_sim" type="cmd_generator.py" name="cmd_generator" output="screen"/> -->
-        <node pkg="puzzlebot_control" type="control.py" name="control" output="screen"/>
+        <node pkg="puzzlebot_controller" type="control.py" name="control" output="screen"/>
 
 </launch>

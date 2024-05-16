@@ -52,6 +52,7 @@ if __name__ == '__main__':
                     break
                 orientation_controller_activate_publisher.publish(Bool(False))
 
+                rospy.sleep(1)
                 unlocked = False
                 pose_controller_activate_publisher.publish(Bool(True))
                 quat = tft.quaternion_from_euler(0.0, 0.0, yaw)

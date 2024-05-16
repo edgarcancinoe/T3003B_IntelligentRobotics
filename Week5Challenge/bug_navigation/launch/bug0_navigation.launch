@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+    <launch>
+        <!-- Send static transform -->
+        <node pkg="tf2_ros" type="static_transform_publisher" name="map_joint" args="0 0 0 0 0 0 map laser_link"/>
+        
+        <!-- Include puzzlebot gazebo world launch -->
+        <include file="$(find puzzlebot_gazebo)/launch/puzzlebot_gazebo.launch"></include>
+        
+        
+    </launch>

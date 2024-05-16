@@ -12,12 +12,13 @@ class Puzzlebot_orientation_controller():
     def __init__(self, starting_orientation,
                  kp, ki, e_tolerance, 
                  commands_topic, odom_topic, goals_topic, 
-                 send_done_topic, orientation_control_activate_topic, control_rate):
+                 send_done_topic, orientation_control_activate_topic, control_rate, max_w):
 
         # Control parameters
         self.kp = kp
         self.ki = ki
         self.ei = 0.0
+        self.max_w = max_w
 
         # Reference (goal)
         self.target_yaw : float = None
@@ -109,7 +110,7 @@ class Puzzlebot_orientation_controller():
             w = self.kp * e + self.ki * self.ei
 
         twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
-                            angular = Vector3(x = 0.0, y = 0.0, z = w))
+                            angular = Vector3(x = 0.0, y = 0.0, z = np.clip(w, -self.max_w, self.max_w)))
                 
         self.cmd_vel_publisher.publish(twist_msg)
 
@@ -122,12 +123,14 @@ if __name__=='__main__':
     params = get_global_params()
     
     # Get Local ROS parameters
-    kp = rospy.get_param('~kp', 0.1)
-    ki = rospy.get_param('~ki', 0.001)
+    kp = rospy.get_param('~kp')
+    ki = rospy.get_param('~ki')
     e_tolerance = rospy.get_param('~e_tolerance', 0.001)
     odom_topic = rospy.get_param('~odom_topic', '/puzzlebot/gazebo_odom')
     goals_topic =  rospy.get_param('/orientation_controller_topic')
     orientation_control_activate_topic = rospy.get_param('/orientation_control_activate_topic')
+
+    max_w = rospy.get_param('/max_w')
 
     # Controller instance
     starting_pose = Point(x = params['starting_state']['x'], 
@@ -146,7 +149,8 @@ if __name__=='__main__':
                                                 goals_topic = goals_topic,
                                                 send_done_topic = params['unlock_topic'],
                                                 orientation_control_activate_topic = orientation_control_activate_topic,
-                                                control_rate = params['control_rate'])
+                                                control_rate = params['control_rate'],
+                                                max_w = max_w)
     
     try:
         rospy.loginfo('The controller node is Running')

@@ -62,7 +62,6 @@ class Puzzlebot_controller():
     
     def odometry_callback(self, msg):
         self.s = msg.pose.pose
-        self.s.orientation = Quaternion(x=0.0, y=0.0, z=self.orientation_as_euler(self.s.orientation), w=1.0)
 
     def reset(self):
         self.ei_l = 0.0
@@ -90,13 +89,20 @@ class Puzzlebot_controller():
         r = np.sqrt((e_x * e_x) + (e_y * e_y))
 
         # Angular variables
-        target_z_orientation = self.orientation_as_euler(self.s_d.orientation)
-
+        target_yaw= self.orientation_as_euler(self.s_d.orientation)
+        state_yaw = self.orientation_as_euler(self.s.orientation)
         # Line of sight angle
         angle = np.arctan2(e_y, e_x)
-        # Angle pose to line of sight
-        theta = -(angle - target_z_orientation)
-        delta = -(angle - self.s.orientation.z)
+        # Angle from target pose to the line of sight
+        theta = target_yaw - angle 
+        # Angle from current pose to the line of sight
+        delta = state_yaw - angle 
+
+        # Account for +-pi discontinuity
+        theta = (theta + np.pi) % (2 * np.pi) - np.pi
+        delta = (delta + np.pi) % (2 * np.pi) - np.pi
+
+
         virtual_control_delta = np.arctan(-self.k1 * theta)
 
         # Curvature
@@ -123,6 +129,7 @@ class Puzzlebot_controller():
         # State descriptive variables
         r, theta, delta, virtual_control_delta, K = self._get_descriptive_state_variables()
         v = self._dynamic_velocity(K)
+
         w = - v / r * (self.k2 * (delta - virtual_control_delta) + (1 + self.k1 / (1 + (self.k1 * theta)**2)) * np.sin(theta))
 
         if r < self.r_tolerance:
@@ -153,7 +160,7 @@ if __name__=='__main__':
     k2 = rospy.get_param('~k2', 0.0)
     beta = rospy.get_param('~beta', 0.0)
     lambda_ = rospy.get_param('~lambda', 0.0)
-    v_max = rospy.get_param('~v_max', 0.0)
+    v_max = min(rospy.get_param('~v_max'), rospy.get_param('/max_v'))
     r_tolerance = rospy.get_param('~r_tolerance', 0.0)
     odom_topic = rospy.get_param('~odom_topic', '/puzzlebot/gazebo_odom')
 

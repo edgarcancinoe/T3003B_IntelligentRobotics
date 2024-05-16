@@ -3,7 +3,7 @@ kmodel_rate: 50
 odom_rate: 50
 rviz_rate: 50
 wheel_radius: 0.05
-track_length: 0.19
+track_length: 0.18
 damping: 0.01
 inertial_frame_name: 'odom'
 robot_frame_name: 'base_link'
