@@ -130,6 +130,7 @@ class Puzzlebot_controller():
         r, theta, delta, virtual_control_delta, K = self._get_descriptive_state_variables()
         v = self._dynamic_velocity(K)
 
+        # Angular velocity is propotional to the the linear velocity and inversely proportional to the curvature 
         w = - v / r * (self.k2 * (delta - virtual_control_delta) + (1 + self.k1 / (1 + (self.k1 * theta)**2)) * np.sin(theta))
 
         if r < self.r_tolerance:

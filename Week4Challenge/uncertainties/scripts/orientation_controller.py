@@ -12,13 +12,15 @@ class Puzzlebot_orientation_controller():
     def __init__(self, starting_orientation,
                  kp, ki, e_tolerance, 
                  commands_topic, odom_topic, goals_topic, 
-                 send_done_topic, orientation_control_activate_topic, control_rate, max_w):
+                 send_done_topic, orientation_control_activate_topic, control_rate, max_w, min_w, min_w_to_move):
 
-        # Control parameters
+        # Control parameter sof the wheels to ensure they both move and avoid drifting
         self.kp = kp
         self.ki = ki
         self.ei = 0.0
         self.max_w = max_w
+        self.min_w = min_w
+        self.min_w_to_move = min_w_to_move
 
         # Reference (goal)
         self.target_yaw : float = None
@@ -69,6 +71,7 @@ class Puzzlebot_orientation_controller():
         self.active = False
         self.starting_yaw = None
         self.reached_goal = False
+        rospy.logwarn(f'Orientation controller deactivated')
 
     def set_goal(self, goal: Float32):
         self.ei = 0.0
@@ -101,16 +104,27 @@ class Puzzlebot_orientation_controller():
         self.ei += e * dt
         if abs(e) < self.e_tolerance:
             rospy.logwarn(f'Goal reached')
-            self.reset()
-            rospy.logwarn(f'Orientation controller deactivated')
-            self.active = False
+            print(self.kp * e + self.ki * self.ei)
             self.reached_goal_publisher.publish(Bool(True))
+            self.reset()
             w = 0.0
         else:
             w = self.kp * e + self.ki * self.ei
 
+            # Sanity check on the angular velocity
+            if abs(w) < self.min_w_to_move:
+                w = 0.0
+                rospy.logwarn(f'Goal reached (small w)')
+                self.reached_goal_publisher.publish(Bool(True))
+                self.reset()
+                w = 0.0
+            elif abs(w) < self.min_w:
+                w = np.sign(w) * self.min_w
+            else:
+                w = np.clip(w, -self.max_w, self.max_w)
+
         twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
-                            angular = Vector3(x = 0.0, y = 0.0, z = np.clip(w, -self.max_w, self.max_w)))
+                            angular = Vector3(x = 0.0, y = 0.0, z = w))
                 
         self.cmd_vel_publisher.publish(twist_msg)
 
@@ -129,6 +143,9 @@ if __name__=='__main__':
     odom_topic = rospy.get_param('~odom_topic', '/puzzlebot/gazebo_odom')
     goals_topic =  rospy.get_param('/orientation_controller_topic')
     orientation_control_activate_topic = rospy.get_param('/orientation_control_activate_topic')
+
+    min_w = rospy.get_param('/min_w')
+    min_w_to_move = rospy.get_param('/min_w_to_move')
 
     max_w = rospy.get_param('/max_w')
 
@@ -150,7 +167,9 @@ if __name__=='__main__':
                                                 send_done_topic = params['unlock_topic'],
                                                 orientation_control_activate_topic = orientation_control_activate_topic,
                                                 control_rate = params['control_rate'],
-                                                max_w = max_w)
+                                                max_w = max_w,
+                                                min_w = min_w,
+                                                min_w_to_move = min_w_to_move)
     
     try:
         rospy.loginfo('The controller node is Running')

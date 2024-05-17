@@ -33,44 +33,68 @@ navigator_rate: 50
 commands_topic: '/puzzlebot/cmd_vel'
 odometry_topic: '/puzzlebot/odom'
 sim_odom_topic: '/puzzlebot/odom'
-
-# Will use the minimum of the two /max_v and /pose_controller/v_max
-max_v: 0.22
-max_w: 0.22
-
-# To ensure the physical wheels of the robot move: 
-
-# >>>> min_w_to_move < w < min_w will be assigned to w = min_w <<<
-
-min_w_to_move: 0.012 # The minimum angular velocity to consider that the controller is still trying to move the robot
-min_w: 0.1 # The minimum angular velocity to make sure both motors are moving
-
 pose_controller:
   odom_topic: '/puzzlebot/odom'
 
   # Control parameters
-  k1: 2
-  k2: 8
+  k1: .5
+  k2: 7
   beta: 0.8
-  lambda_: 1.1
-  v_max: 0.25
+  lambda_: 1.0
+  v_max: 0.15
 
   # Tolerances
-  r_tolerance: 0.0015
+  r_tolerance: 0.04
   
 ibvs_controller:
   # Proportional controller
-  kp: 0.3
+  kp: 0.44
   # Tolerances
   e_tolerance: 30
 
 orientation_controller:
   odom_topic: '/puzzlebot/odom'
-  kp: 0.18
-  ki: 0.002
-  e_tolerance: 0.005
-  
-uncertainty_localisation:
-  k_l: 2.58
-  k_r: 2.58
+  kp: 0.01
+  ki: 0.001
+  e_tolerance: 0.01
 
+  
+
+control_rate: 50
+kmodel_rate: 50
+odom_rate: 50
+rviz_rate: 50
+wheel_radius: 0.05
+track_length: 0.18
+damping: 0.01
+inertial_frame_name: 'odom'
+robot_frame_name: 'base_link'
+commands_topic: 'puzzlebot/cmd_vel'
+pose_topic: 'pose'
+wl_topic: 'wl'
+wr_topic: 'wr'
+odometry_topic: 'odom'
+starting_state:
+  'x': 0.0
+  'y': 0.0
+  'theta': 0.0
+
+joint_state_pub:
+  joint_states_topic: '/joint_states'
+  joint_names: ['leftWheel', 'rightWheel']
+  joint_initial_positions: [0.0, 0.0]
+
+control:
+  # Proportional controller
+  kp_V: 0.5
+  kp_w: 0.82
+  # Integral controller
+  ki_V: 0.008
+  ki_w: 0.0002
+  # Derivative controller
+  kd_V: 0.05
+  kd_w: 0.05
+
+  # Tolerances
+  d_tolerance: 0.0025
+  deg_tolerance: 0.005
