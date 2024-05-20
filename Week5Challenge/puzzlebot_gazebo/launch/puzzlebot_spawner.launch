@@ -2,7 +2,7 @@
 <launch>
 
   <!--Robot 1 Description-->
-  <arg name="robot" default="puzzlebot_1"/>
+  <arg name="robot" default="puzzlebot"/>
 
   <!--Robot 1 Description-->
   <arg name="robot_description_file" default="puzzlebot_hacker_ed_v1_3.xacro"/>

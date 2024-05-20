@@ -3,15 +3,15 @@
     <launch>
 
         <!--Puzzlebot Parameters-->
-        <arg name="robot_name" default="puzzlebot_1"/>
+        <arg name="robot_name" default="puzzlebot"/>
         <arg name="robot_description_file" default="puzzlebot_jetson_lidar_ed_v1.xacro"/>
-        <arg name="pos_x" default="2.0"/>
-        <arg name="pos_y" default="2.0"/>
-        <arg name="pos_theta" default="-1.57"/>
+        <arg name="pos_x" default="0.0"/>
+        <arg name="pos_y" default="-2.50"/>
+        <arg name="pos_theta" default="1.57"/>
 
         <!-- Gazebo Parameters -->
         <!--<arg name="world_name" default="$(find puzzlebot_gazebo)/worlds/obstacle_avoidance_3.world"/>-->
-        <arg name="world_name" default="$(find puzzlebot_gazebo)/worlds/puzzlebot_arena_markers.world"/>
+        <arg name="world_name" default="$(find puzzlebot_gazebo)/worlds/obstacle_avoidance_1.world"/>
         <arg name="paused" default="false"/>
         <arg name="use_sim_time" default="true"/>
         <arg name="gui" default="true"/>

@@ -13,7 +13,7 @@ class StateGatherer():
         rospy.init_node("pose_tf")
         #rospy.wait_for_service('/gazebo/model_states')
         print("HERE")
-        rospy.Subscriber("puzzlebot_1/real_pose", Odometry, self.callback)
+        rospy.Subscriber("puzzlebot/real_pose", Odometry, self.callback)
 
     def main(self):
         rospy.spin()
@@ -22,11 +22,11 @@ class StateGatherer():
     def callback(self, data):
         try: 
 
-            #aux_idx = data.name.index("puzzlebot_1")
+            #aux_idx = data.name.index("puzzlebot")
             t = TransformStamped()
             t.header.stamp = rospy.Time.now()
             t.header.frame_id = "world"
-            t.child_frame_id = "puzzlebot_1/base_link"
+            t.child_frame_id = "puzzlebot/base_link"
             t.transform.translation = data.pose.pose.position
             t.transform.rotation = data.pose.pose.orientation
             self.br.sendTransform(t)

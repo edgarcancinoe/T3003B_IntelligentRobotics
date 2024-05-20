@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+    <launch>
+        <!-- Parameters -->
+        <rosparam file="$(find bug_navigation)/config/config.yaml" command="load" />
+
+        <!-- RVIZ -->
+        <!-- <arg name="rvizconfig" default="$(find bug_navigation)/config/rviz_config.rviz"/>
+        <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true"/>  -->
+        
+        <!-- Send static transform -->
+        <node pkg="tf2_ros" type="static_transform_publisher" name="odom_base_joint" args="0 0 0.1 0 0 0 odom base_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 odom laser_link"/>
+        
+        <!-- Include puzzlebot gazebo world launch -->
+        <include file="$(find puzzlebot_gazebo)/launch/puzzlebot_gazebo.launch"></include>
+        
+        <!-- Include bug0 navigation node -->
+        <node pkg="bug_navigation" type="orientation_controller.py" name="orientation_controller" output="screen"/>
+        <node pkg="bug_navigation" type="pose_controller.py" name="pose_controller" output="screen"/>
+        <node pkg="bug_navigation" type="bug_navigator.py" name="bug_navigator" output="screen"/>
+
+    </launch>

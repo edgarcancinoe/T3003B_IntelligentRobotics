@@ -30,33 +30,35 @@ camera_topic: '/puzzlebot/camera/image_raw'
 unlock_topic: '/unlock'
 control_rate: 50
 navigator_rate: 50
-commands_topic: '/puzzlebot/cmd_vel'
+commands_topic: '/cmd_vel'
 odometry_topic: '/puzzlebot/odom'
 sim_odom_topic: '/puzzlebot/odom'
 
 # Will use the minimum of the two /max_v and /pose_controller/v_max
-max_v: 0.22
-max_w: 0.22
+max_v: 0.12
+max_w: 0.2
 
 # To ensure the physical wheels of the robot move: 
+# values in the range      min_w_to_move < w < min_w       will be assigned to w = min_w 
 
-# >>>> min_w_to_move < w < min_w will be assigned to w = min_w <<<
+# NOTE: this configuration will not make puzzlebot do perfect orientation changes, but we adapted it to work with the real puzzlebot as the
+# motors have different reactions to the same angular velocity.
 
-min_w_to_move: 0.012 # The minimum angular velocity to consider that the controller is still trying to move the robot
-min_w: 0.1 # The minimum angular velocity to make sure both motors are moving
+min_w_to_move: 0.0235 # The minimum angular velocity to consider that the controller is still trying to move the robot
+min_w: 0.08 # The minimum angular velocity to make sure both motors are moving
 
 pose_controller:
   odom_topic: '/puzzlebot/odom'
 
   # Control parameters
-  k1: 2
-  k2: 8
-  beta: 0.8
-  lambda_: 1.1
-  v_max: 0.25
+  k1: .08
+  k2: 0.6
+  beta: 0.9
+  lambda_: 1.15
+  v_max: 0.12
 
   # Tolerances
-  r_tolerance: 0.0015
+  r_tolerance: 0.03
   
 ibvs_controller:
   # Proportional controller
@@ -66,9 +68,9 @@ ibvs_controller:
 
 orientation_controller:
   odom_topic: '/puzzlebot/odom'
-  kp: 0.18
-  ki: 0.002
-  e_tolerance: 0.005
+  kp: 0.08
+  ki: 0.001
+  e_tolerance: 0.01
   
 uncertainty_localisation:
   k_l: 2.58

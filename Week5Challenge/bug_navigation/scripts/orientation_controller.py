@@ -105,7 +105,6 @@ class Puzzlebot_orientation_controller():
         self.ei += e * dt
         if abs(e) < self.e_tolerance:
             rospy.logwarn(f'Goal reached')
-            print(self.kp * e + self.ki * self.ei)
             self.reached_goal_publisher.publish(Bool(True))
             self.reset()
             w = 0.0
