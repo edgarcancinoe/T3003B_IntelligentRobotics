@@ -66,7 +66,6 @@
             </geometry>
         </visual>
     </link>
-
     
     <!-- Camera Joint -->
     <joint name="camera_joint" type="fixed">
@@ -85,20 +84,14 @@
         </visual>
     </link>
 
-    <joint name="aruco_joint" type="fixed">
-        <origin xyz="0.0 0.0 50.0" rpy="0.0 0.0 0.0"/>
-        <parent link="base_link"/>
-        <child link="aruco_box"/>
-        <axis xyz="0 1 0"/>
+    <!-- Lidar Joint -->
+    <joint name="lidar_joint" type="fixed">
+        <parent link="chassis"/>
+        <child link="lidar_link"/>
+        <origin xyz="0.05 0.0 0.08" rpy="0 0 0"/>
     </joint>
 
-    <link name="aruco_box">
-        <visual>
-            <origin xyz="-0.025 0.025 -0.025" rpy = "0 0 0"/>
-            <geometry>
-                <mesh filename="package://rviz_simulation/models/cube.stl" scale="0.0025 0.0025 0.0025"/>
-            </geometry>
-        </visual>
-    </link>
+    <!-- Camera Link -->
+    <link name="lidar_link"></link>
 
 </robot>

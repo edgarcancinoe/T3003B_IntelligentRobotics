@@ -1,0 +1,76 @@
+
+camera_frame: 'camera_link'
+object_frame: 'aruco_box'
+robot_frame: 'base_link'
+inertial_frame: 'odom'
+target_id: 8
+aruco_size: 0.048
+desired_corner_locations: [[381., 435.], 
+                            [243., 435.], 
+                            [240., 301.], 
+                            [384., 302.]]
+
+z_desired: 0.18
+
+focal_length_pixel: 530.466941
+
+camera_matrix: [[530.466941, 0, 205], 
+                [0, 530.466941, 154], 
+                [0, 0, 1]]
+
+distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+target_detection_topic: '/corners'
+ibvs_activate_topic: '/ibvs_activate'
+pose_control_activate_topic: '/pose_control_activate'
+orientation_control_activate_topic: '/orientation_control_activate'
+pose_controller_topic: '/goal_point'
+orientation_controller_topic: '/orientation_goals'
+camera_topic: '/puzzlebot/camera/image_raw'
+unlock_topic: '/unlock'
+control_rate: 50
+navigator_rate: 50
+commands_topic: '/puzzlebot/cmd_vel'
+odometry_topic: '/puzzlebot/odom'
+sim_odom_topic: '/puzzlebot/odom'
+pose_controller:
+  odom_topic: '/puzzlebot/odom'
+
+  # Control parameters
+  k1: .5
+  k2: 7
+  beta: 0.8
+  lambda_: 1.0
+  v_max: 0.15
+
+  # Tolerances
+  r_tolerance: 0.04
+  
+ibvs_controller:
+  # Proportional controller
+  kp: 0.44
+  # Tolerances
+  e_tolerance: 30
+
+orientation_controller:
+  odom_topic: '/puzzlebot/odom'
+  kp: 0.01
+  ki: 0.001
+  e_tolerance: 0.01
+
+# kmodel_rate: 50
+# odom_rate: 50
+# rviz_rate: 50
+# wheel_radius: 0.05
+# track_length: 0.19
+# inertial_frame_name: 'odom'
+# commands_topic: 'cmd_vel'
+# pose_topic: 'pose'
+# wl_topic: 'wl'
+# wr_topic: 'wr'
+# odometry_topic: 'odom'
+
+# joint_state_pub:
+#   joint_states_topic: '/joint_states'
+#   joint_names: ['leftWheel', 'rightWheel']
+#   joint_initial_positions: [0.0, 0.0]

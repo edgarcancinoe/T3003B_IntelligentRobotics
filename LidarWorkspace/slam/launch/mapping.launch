@@ -5,38 +5,28 @@
         <arg name="world_file" default="$(find slam)/worlds/world.world"/>
         <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="$(arg world_file)"/>
 
-        <include file="$(find slam)/launch/rviz.launch"></include>
 
         <!-- Static Transform Publications -->
+        <node  pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="map"
+                args="0  0  0  0  0  0   map   odom"/>
+
         <node  pkg="tf2_ros" 
                 type="static_transform_publisher" 
                 name="odom"
                 args="0  0  0  0  0  0   odom   base_link"/>
 
-        <node   pkg="tf2_ros" 
-                type="static_transform_publisher" 
-                name="chassis_joint"
-                args="0  0  0.05  0  0  0   base_link   chassis"/>
-        <node   pkg="tf2_ros" 
-                type="static_transform_publisher" 
-                name="leftWheel"
-                args="0.0525 0.103 0.0  0  0  0   chassis    wl_link"/>
-        <node   pkg="tf2_ros" 
-                type="static_transform_publisher" 
-                name="rightWheel"
-                args="0.0525 -0.103 0.0 0  0  0   chassis   wr_link"/>
-        <node   pkg="tf2_ros" 
-                type="static_transform_publisher" 
-                name="camera_joint"
-                args="0.1 0.0 0.04  -1.57079632679 0 -1.57079632679   chassis   camera_link"/>
-        <node   pkg="tf2_ros"
-                type="static_transform_publisher"
-                name="laser_joint"    
-                args="0.025 0.0 0.133 0 0 0   chassis   lidar_link"/>
-        
-        <!-- Load config file for nodes parameter configuration -->
-        <rosparam file="$(find move_to_tag)/config/config.yaml" command="load" />
+        <include file="$(find slam)/launch/rviz.launch"></include>
 
+        <!-- Launch slam_toolbox mapper -->
+        <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
+                <rosparam command="load" file="$(find slam)/config/mapper_params_online_async.yaml" />
+        </node>
+
+        <rosparam file="$(find slam)/config/config.yaml" command="load" />
+
+        <!-- Launch nodes -->
         <node pkg="localisation" type="localisation.py" name="localisation" output="screen"/>
         <node pkg="puzzlebot_sim" type="puzzlebot_kinematic_model.py" name="puzzlebot_kinematic_model" output="screen"/>
         <node pkg="move_to_tag" type="pose_controller.py" name="pose_controller" output="screen"/>

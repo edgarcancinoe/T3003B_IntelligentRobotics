@@ -7,7 +7,7 @@ track_length: 0.18
 damping: 0.01
 inertial_frame_name: 'odom'
 robot_frame_name: 'base_link'
-commands_topic: 'puzzlebot/cmd_vel'
+# commands_topic: 'puzzlebot/cmd_vel'
 pose_topic: 'pose'
 wl_topic: 'wl'
 wr_topic: 'wr'

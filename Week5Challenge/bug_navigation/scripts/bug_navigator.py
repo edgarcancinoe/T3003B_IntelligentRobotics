@@ -397,10 +397,14 @@ class Bug2Nav(Navigator):
     def _free_way_detected(self) -> bool:
         # Leave wall if the robot is on the goal line and the distance to the goal is less than the distance hitpoint to goal
         if self._on_goal_line():
+            rospy.logwarn('Found line to goal')
             distance_to_goal = self._euclidean_distance(self.pose.position, self.final_goal.position)
 
             if abs(distance_to_goal - self.d_hitpoint_to_goal) > self.min_d_hitpoint:
+                rospy.logwarn('Free way detected')
                 return True
+            else:
+                rospy.logwarn('At previous hitpoint')
         return False
 
 class Bug0Nav(Navigator):
@@ -477,7 +481,7 @@ if __name__ == '__main__':
     
     rospy.sleep(3)
 
-    point = Point(3.3, -1.5, 0)
+    point = Point(5.25, -2.20, 0.0)
     navigator.go_to_point(point)
 
     # Spin the node

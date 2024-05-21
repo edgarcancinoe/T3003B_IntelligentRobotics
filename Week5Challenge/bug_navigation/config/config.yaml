@@ -71,8 +71,8 @@ ibvs_controller:
 orientation_controller:
   odom_topic: '/puzzlebot/base_controller/odom'
   kp: 1.2
-  ki: 0.35
-  e_tolerance: 0.01
+  ki: 0.4
+  e_tolerance: 0.05
   
 uncertainty_localisation:
   k_l: 2.58
@@ -86,8 +86,8 @@ bug_navigator:
   
   lidar_resolution: 360 # 360, 720, 1080
 
-  v: 0.15
-  w: 0.6
+  v: 0.135
+  w: 0.5
 
   bug2:
     min_d_hitpoint: 0.04

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+
+        <!-- Static Transform Publications -->
+
+        <node  pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="odom"
+                args="0  0  0  0  0  0   map   odom"/>
+
+        <node  pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="base"
+                args="0  0  0  0  0  0   odom   base_link"/>
+
+        <node  pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="lidar_transform"
+                args="0  0  0  0  0  0   lidar_link   laser"/>
+
+        <!-- <node  pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="lidar_transform"
+                args="0  0  0.0  0  3.1415926535  0   lidar_link   laser"/> -->
+
+        <!-- Launch slam_toolbox mapper -->
+        <node pkg="slam_toolbox" type="async_slam_toolbox_node" name="slam_toolbox" output="screen">
+                <rosparam command="load" file="$(find slam)/config/mapper_params_online_async_real_lidar.yaml" />
+        </node>
+        
+        <include file="$(find slam)/launch/rviz.launch"></include>
+
+        <node pkg="uncertainties" type="uncertainty_localisation.py" name="uncertainty_localisation" output="screen"/>
+
+</launch>
