@@ -97,10 +97,10 @@ class Navigator:
         # Lidar readings start at robots back so we need to add an offset to the angles
         offset = int(90 // self.angle_step)
 
-        angle_min_idx = offset + int(self.lidar_angle_min // self.angle_step)
-        theta1_idx = offset + int(theta_1 // self.angle_step)
-        theta2_idx = offset + int(theta_2 // self.angle_step)
-        pi_idx = offset + int(self.lidar_angle_max // self.angle_step)
+        angle_min_idx = offset + int(np.ceil(self.lidar_angle_min // self.angle_step))
+        theta1_idx = offset + int(np.floor(theta_1 // self.angle_step))
+        theta2_idx = offset + int(np.floor(theta_2 // self.angle_step))
+        pi_idx = offset + int(np.ceil(self.lidar_angle_max // self.angle_step))
 
         front_slice = slice(theta1_idx, theta2_idx,1)
         left_slice = slice(theta2_idx + 1, pi_idx,1)
