@@ -65,7 +65,7 @@ class Puzzlebot_controller():
     
     def odometry_callback(self, msg):
         self.s = msg.pose.pose
-        self.s.orientation = Quaternion(x=0.0, y=0.0, z=self.orientation_as_euler(self.s.orientation), w=1.0)
+        # self.s.orientation = Quaternion(x=0.0, y=0.0, z=self.orientation_as_euler(self.s.orientation), w=1.0)
 
     def reset(self):
         self.ei_l = 0.0

@@ -11,7 +11,7 @@
 
         <!-- Gazebo Parameters -->
         <!--<arg name="world_name" default="$(find puzzlebot_gazebo)/worlds/obstacle_avoidance_3.world"/>-->
-        <arg name="world_name" default="$(find puzzlebot_gazebo)/worlds/office.world"/>
+        <arg name="world_name" default="$(find puzzlebot_gazebo)/worlds/puzzlebot_arena_markers.world"/>
         <arg name="paused" default="false"/>
         <arg name="use_sim_time" default="true"/>
         <arg name="gui" default="true"/>

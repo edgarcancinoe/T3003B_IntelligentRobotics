@@ -5,6 +5,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import cv2.aruco as aruco
+print(cv2.__version__)
 import numpy as np
 import tf2_ros
 import tf

@@ -50,7 +50,7 @@ class Navigator:
 
         self.max_front_distances, self.max_left_distances, self.max_right_distances = self._get_front_left_right_scan_max_ranges(self.theta_1, self.theta_2, R, x_lim)
         
-        self.front_slice, self.left_slice, self.right_slice = self._get_front_left_right_scan_slices(self.theta_1, self.theta_2)
+        self.front_slice, self.left_slice, self.right_slice = self._get_front_left_right_scan_slices()
 
         # Odometry state    
         self.pose = Pose()
@@ -81,13 +81,13 @@ class Navigator:
 
         # Sides: from angle_min to theta_1 and theta_2 to angle_max degrees, safe if d > x_lim / cos(theta)
         
-        side_readings_length = int((theta_1 - self.lidar_angle_min) / self.angle_step - 1)
+        side_readings_length = int(np.ceil((theta_1 - self.lidar_angle_min) / self.angle_step - 1))
         max_right_distances = np.array([x_lim / np.cos(np.radians(n * self.angle_step)) for n in range(side_readings_length)])
         max_left_distances = np.flip(max_right_distances)
 
         return max_front_distances, max_left_distances, max_right_distances
     
-    def _get_front_left_right_scan_slices(self, theta_1, theta_2, offset=0):
+    def _get_front_left_right_scan_slices(self, offset=-90):
         """
             Returns the slices for the front, left and right lidar readings.
             The slices are defined by the angles theta_1 and theta_2, and the offset  (degrees) is used to shift the slices if needed.
@@ -95,26 +95,43 @@ class Navigator:
 
         
         # Lidar readings start at robots back so we need to add an offset to the angles
-        offset = int(90 // self.angle_step)
+        offset = int(offset // self.angle_step)
 
-        angle_min_idx = offset + int(np.ceil(self.lidar_angle_min // self.angle_step))
-        theta1_idx = offset + int(np.floor(theta_1 // self.angle_step))
-        theta2_idx = offset + int(np.floor(theta_2 // self.angle_step))
-        pi_idx = offset + int(np.ceil(self.lidar_angle_max // self.angle_step))
+        angle_min_idx = offset + int(self.lidar_angle_min // self.angle_step)
+        theta1_idx = offset + int(self.theta_1 // self.angle_step)
+        theta2_idx = offset + int(self.theta_2 // self.angle_step)
+        pi_idx = offset + int(self.lidar_angle_max // self.angle_step)
+ 
+        front_slice = slice(theta1_idx, theta2_idx, 1)
+        left_slice = slice(theta2_idx + 1, pi_idx, 1)
+        right_slice = slice(angle_min_idx, theta1_idx - 1, 1)
 
-        front_slice = slice(theta1_idx, theta2_idx,1)
-        left_slice = slice(theta2_idx + 1, pi_idx,1)
-        right_slice = slice(angle_min_idx, theta1_idx - 1,1)
+        # Ensure left and right slices have the same length
+        min_length = min(len(range(left_slice.start, left_slice.stop)), len(range(right_slice.start, right_slice.stop)))
+        left_slice = slice(left_slice.start, left_slice.start + min_length, left_slice.step)
+        right_slice = slice(right_slice.start, right_slice.start + min_length, right_slice.step)
 
         return front_slice, left_slice, right_slice
     
-    def _collision_in(self, detections, distances, percentage=0.05):
+    def _collision_in(self, detections, distances, percentage=0.03):
         """
             Returns True if more than <percentage>% of the readings 
             in detections are less than the corresponding distances.
         """
         return np.sum(detections < distances)/len(detections) > percentage
     
+    def _sanitize_detections(self, data, slice_):
+        if slice_.start > 0 and slice_.stop > slice_.start: # Both are positive and stop is greater than start
+            return data[slice_]
+        elif slice_.start > 0 and slice_.stop < 0: # Start is positive and stop is negative
+            return data[slice_.start:slice_.stop]
+        elif slice_.start < 0 and slice_.stop > 0: # Start is negative and stop is positive
+            return np.concatenate((data[slice_.start:], data[0:slice_.stop]))
+        elif slice_.start < 0 and slice_.stop < 0: # Both are negative
+            return data[slice_.start:slice_.stop]
+        else:
+            raise ValueError('Invalid slice')
+
     def _lidar_callback(self, msg):
         
         collision = False
@@ -122,21 +139,22 @@ class Navigator:
         left_free = True
         right_free = True
 
-        # Check if robot can move ahead
-        if self._collision_in(msg.ranges[self.front_slice], self.max_front_distances):
+        front_detections = self._sanitize_detections(msg.ranges, self.front_slice)
+        left_detections = self._sanitize_detections(msg.ranges, self.left_slice)
+        right_detections = self._sanitize_detections(msg.ranges, self.right_slice)
+
+        if self._collision_in(front_detections, self.max_front_distances):
             rospy.logwarn_once('Collision ahead (front)')
             collision = True
             front_free = False
-            
-        if self._collision_in(msg.ranges[self.right_slice], self.max_right_distances):
-            rospy.logwarn_once('Collision ahead (right)')
-            collision = True
-            right_free = False
-            
-        if self._collision_in(msg.ranges[self.left_slice], self.max_left_distances):
+        if self._collision_in(left_detections, self.max_left_distances):
             rospy.logwarn_once('Collision ahead (left)')
             collision = True
             left_free = False
+        if self._collision_in(right_detections, self.max_right_distances):
+            rospy.logwarn_once('Collision ahead (right)')
+            collision = True
+            right_free = False
         
         self.collision_ahead = collision
         self.front_free = front_free
@@ -422,7 +440,7 @@ class Bug0Nav(Navigator):
         
         # Robot orientation in [0 2pi]
         robot_yaw = tft.euler_from_quaternion([self.pose.orientation.x, self.pose.orientation.y, self.pose.orientation.z, self.pose.orientation.w])[2]
-        robot_yaw = robot_yaw - np.pi/2 # Correct orientation so that 0 is at the right side of the robot to follow adopted convention
+        robot_yaw = robot_yaw + np.pi/2 # Correct orientation so that 0 is at the right side of the robot to follow adopted convention
         robot_yaw = np.mod(robot_yaw + 2*np.pi, 2*np.pi)
 
         angle_difference = goal_yaw - robot_yaw
@@ -430,12 +448,16 @@ class Bug0Nav(Navigator):
         if angle_difference > np.pi:
             return False
         
-        target_front_slice, target_left_slice, target_right_slice = self._get_front_left_right_scan_slices(self.theta_1, self.theta_2, offset=angle_difference)
+        target_front_slice, target_left_slice, target_right_slice = self._get_front_left_right_scan_slices(offset=np.degrees(angle_difference))
 
         # Check if there is a free way to the goal
-        frontal_collision = self._collision_in(scan.ranges[target_front_slice], self.max_front_distances)
-        left_collision = self._collision_in(scan.ranges[target_left_slice], self.max_left_distances)
-        right_collision = self._collision_in(scan.ranges[target_right_slice], self.max_right_distances)
+        front_detections = self._sanitize_detections(scan.ranges, target_front_slice)
+        left_detections = self._sanitize_detections(scan.ranges, target_left_slice)
+        right_detections = self._sanitize_detections(scan.ranges, target_right_slice)
+
+        frontal_collision = self._collision_in(front_detections, self.max_front_distances)
+        left_collision = self._collision_in(left_detections, self.max_left_distances)
+        right_collision = self._collision_in(right_detections, self.max_right_distances)
 
         return not frontal_collision and not left_collision and not right_collision
     
@@ -455,7 +477,7 @@ if __name__ == '__main__':
     unlock_topic = rospy.get_param('/unlock_topic')
     cmd_vel_topic = rospy.get_param('/commands_topic')
     
-    goal_tolerance = rospy.get_param('/pose_controller/r_tolerance') * 1.25
+    goal_tolerance = rospy.get_param('/pose_controller/r_tolerance') * 1.35
 
     horizontal_tolerance = rospy.get_param('~horizontal_tolerance')
     frontal_tolerance = rospy.get_param('~frontal_tolerance')
@@ -465,19 +487,19 @@ if __name__ == '__main__':
 
     min_d_hitpoint = rospy.get_param('~bug2/min_d_hitpoint')
 
-    # navigator = Bug0Nav(odometry_topic, lidar_topic, 
-    #                 pose_controller_activate_topic, pose_controller_topic,
-    #                 orientation_controller_activate_topic, orientation_controller_topic, 
-    #                 cmd_vel_topic, unlock_topic,
-    #                 horizontal_tolerance, frontal_tolerance,
-    #                 lidar_resolution, v, w, goal_tolerance, 'right')
+    navigator = Bug0Nav(odometry_topic, lidar_topic, 
+                     pose_controller_activate_topic, pose_controller_topic,
+                     orientation_controller_activate_topic, orientation_controller_topic, 
+                     cmd_vel_topic, unlock_topic,
+                     horizontal_tolerance, frontal_tolerance,
+                     lidar_resolution, v, w, goal_tolerance, 'right')
     
-    navigator = Bug2Nav(odometry_topic, lidar_topic, 
-                    pose_controller_activate_topic, pose_controller_topic,
-                    orientation_controller_activate_topic, orientation_controller_topic, 
-                    cmd_vel_topic, unlock_topic,
-                    horizontal_tolerance, frontal_tolerance,
-                    lidar_resolution, v, w, goal_tolerance, 'left', min_d_hitpoint=min_d_hitpoint)
+    #navigator = Bug2Nav(odometry_topic, lidar_topic, 
+    #                pose_controller_activate_topic, pose_controller_topic,
+    #                orientation_controller_activate_topic, orientation_controller_topic, 
+    #                cmd_vel_topic, unlock_topic,
+    #                horizontal_tolerance, frontal_tolerance,
+    #                lidar_resolution, v, w, goal_tolerance, 'left', min_d_hitpoint=min_d_hitpoint)
     
     rospy.sleep(3)
 
