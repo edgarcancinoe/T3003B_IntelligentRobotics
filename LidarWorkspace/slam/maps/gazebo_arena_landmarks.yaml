@@ -1,4 +1,6 @@
 names: ['corner1', 'corner2', 'corner3', 'corner4']
+# names: ['corner1']
+
 corner1:
   x: 4.0
   y: 4.0
@@ -7,10 +9,10 @@ corner2:
   x: -4.0
   y: 4.0
 
-# corner3:
-#   x: -4.0
-#   y: -4.0
+corner3:
+  x: -4.0
+  y: -4.0
 
-# corner4:
-#   x: 4.0
-#   y: -4.0
+corner4:
+  x: 4.0
+  y: -4.0

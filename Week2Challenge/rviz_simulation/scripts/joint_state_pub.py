@@ -146,9 +146,9 @@ if __name__ == '__main__':
     joint_names = rospy.get_param('~joint_names', ['leftWheel', 'rightWheel'])
     joint_initial_positions = rospy.get_param('~joint_initial_positions', [0.0, 0.0])
     joint_states_topic = rospy.get_param('~joint_states', '/joint_states')
-    
+    robot_frame = rospy.get_param('/robot_frame')
     joint_state_publisher = Joint_State_Publisher(inertial_frame_name=params['inertial_frame_name'], 
-                                                  robot_frame_name=params['robot_frame_name'],
+                                                  robot_frame_name=robot_frame,
                                                   r=params['wheel_radius'], l=params['track_length'],
                                                   joint_names=joint_names, 
                                                   joint_initial_positions=joint_initial_positions, 

@@ -12,7 +12,6 @@
         <param name="robot_description" command="cat $(arg puzzlebot_sim_model)" />
 
         <!-- NODES -->
-        <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="simulated_state_publisher" output="screen"/>
 

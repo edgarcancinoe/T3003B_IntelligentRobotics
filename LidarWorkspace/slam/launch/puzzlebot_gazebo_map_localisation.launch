@@ -1,10 +1,8 @@
 <?xml version="1.0"?>
 <launch>
         <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] [${node}]: ${message}"/>
-
-        <!-- Send static transform -->
-        <node pkg="tf2_ros" type="static_transform_publisher" name="odom_base_joint" args="0 0 0 0 0 0 map odom"/>
-        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 odom laser_link"/>
+        
+        <include file="$(find slam)/launch/rviz.launch"></include>
 
         <!-- Include puzzlebot gazebo world launch -->
         <include file="$(find puzzlebot_gazebo)/launch/puzzlebot_gazebo.launch">
@@ -13,13 +11,17 @@
             <arg name="pos_theta" value="0.0"/>
         </include>
 
-        <!-- <include file="$(find slam)/launch/rviz.launch"></include> -->
 
-        <rosparam file="$(find slam)/config/config.yaml" command="load" />
+        <!-- Send static transform -->
+        <node pkg="tf2_ros" type="static_transform_publisher" name="odom_base_joint" args="0 0 0 0 0 0 map odom"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 odom puzzlebot/base_footprint"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="laser" args="0 0 0 0 0 0 puzzlebot/lidar_link laser_link"/>
+
+        <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
+
+        <rosparam file="$(find slam)/config/config_arena.yaml" command="load" />
 
         <!-- Launch nodes -->
         <node pkg="uncertainties" type="uncertainty_localisation.py" name="uncertainty_localisation" output="screen"/>
-        <node pkg="move_to_tag" type="pose_controller.py" name="pose_controller" output="screen"/>
-        <node pkg="move_to_tag" type="orientation_controller.py" name="orientation_controller" output="screen"/>
         <node pkg="slam" type="map_localisation.py" name="map_localisation" output="screen"/>
 </launch>

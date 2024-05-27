@@ -11,7 +11,7 @@ import tf.transformations as tft
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
     def __init__(self, odometry_topic, inertial_frame_name, robot_frame_name, 
-                 wheel_radius, track_length, starting_state, odom_rate, k_l, k_r):
+                 wheel_radius, track_length, starting_state, odom_rate, k_l, k_r, wl, wr):
                 
         self.frame_id = inertial_frame_name
         self.child_frame_id = robot_frame_name
@@ -48,8 +48,8 @@ class Locater():
 
         # wl wr Subscriber
         rospy.logwarn('Subscribing to /wl and /wr topics for wheel velocities')
-        wlsub = message_filters.Subscriber(params['wl_topic'], Float32)
-        wrsub = message_filters.Subscriber(params['wr_topic'], Float32)
+        wlsub = message_filters.Subscriber(wl, Float32)
+        wrsub = message_filters.Subscriber(wr, Float32)
 
         # Synchronizer
         ts = message_filters.ApproximateTimeSynchronizer([wlsub, wrsub], queue_size=10, slop=1.0/odom_rate, allow_headerless=True)
@@ -187,7 +187,9 @@ if __name__ == '__main__':
                       starting_state=params['starting_state'],
                       odom_rate=params['odom_rate'],
                       k_l=rospy.get_param('~k_l', 0.0),
-                      k_r=rospy.get_param('~k_r', 0.0))
+                      k_r=rospy.get_param('~k_r', 0.0),
+                      wl=rospy.get_param('~wl_topic'),
+                      wr=rospy.get_param('~wr_topic'))
 
     try:
         rospy.loginfo('Localisation node running')

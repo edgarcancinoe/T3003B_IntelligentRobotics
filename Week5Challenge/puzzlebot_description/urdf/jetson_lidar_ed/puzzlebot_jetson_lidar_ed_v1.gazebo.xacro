@@ -3,7 +3,7 @@
 
   <xacro:arg name="ground_truth" default="true" />
   <xacro:arg name="camera_visual" default="false"/>
-  <xacro:arg name="laser_visual" default="true"/>
+  <xacro:arg name="laser_visual" default="false"/>
 
     <gazebo reference="base_link">
         <material>Gazebo/Yellow</material>
