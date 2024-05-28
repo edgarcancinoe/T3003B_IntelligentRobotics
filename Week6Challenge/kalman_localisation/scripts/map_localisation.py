@@ -9,11 +9,10 @@ import random
 import yaml
 import tf.transformations as tft
 from visualization_msgs.msg import Marker
-# import matplotlib.pyplot as plt
-# import matplotlib.animation as animation
+from geometry_msgs.msg import PoseArray
 
 class MapLocalisation:
-    def __init__(self, scan_topic, map_path, odom_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold, 
+    def __init__(self, scan_topic, map_path, odom_topic, landmark_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold, 
                  search_range, num_ransac_iterations, ransac_d_threshold, min_ransac_inliers, max_n_lines = 2, visualize = True):
         
         # Robot state
@@ -42,7 +41,7 @@ class MapLocalisation:
         # Rviz visualization
         self.visualize = visualize
         self.frame_id = inertial_frame_name
-        self.landmark_publisher = rospy.Publisher('landmark_positions', Marker, queue_size=10)
+        self.landmark_rviz_publisher = rospy.Publisher('landmark_positions', Marker, queue_size=10)
 
         # Load map
         self.landmarks = self.load_map(map_path)
@@ -51,15 +50,8 @@ class MapLocalisation:
         self.scan_sub = rospy.Subscriber(scan_topic, LaserScan, self.scan_callback)
         self.odom_sub = rospy.Subscriber(odom_topic, Odometry, self.odometry_callback)
 
-        # self.fig, self.ax = plt.subplots()
-        # self.scan_plot, = self.ax.plot([], [], 'bo', markersize=2)
-        # self.line_plots = []
-        # self.corner_plots = []
-        # self.ax.set_xlim(-10, 10)
-        # self.ax.set_ylim(-10, 10)
-        
-        # self.ani = animation.FuncAnimation(self.fig, self.update_plot, interval=50)
-        # plt.show()
+        # Located callbacks publisher
+        self.landmark_pub = rospy.Publisher(landmark_topic, PoseArray, queue_size=10)
 
     def load_map(self, map_path):
         """
@@ -124,14 +116,11 @@ class MapLocalisation:
             
             # Yaw orientation to the landmark from the robots current position
             orientation_to_landmark_inertial = np.mod(np.arctan2(e_y, e_x) + 2*np.pi, 2*np.pi)
-            # print() 
-            # print('Orientation to landmark inertial: ', orientation_to_landmark_inertial)
             angle_difference = np.mod(orientation_to_landmark_inertial - robot_yaw + 2*np.pi, 2*np.pi)
-            # print('Angle difference: ', angle_difference)
             # Offset to account for the lidar offset
             angle_difference = np.mod(angle_difference + np.radians(90), 2*np.pi)
             angular_positions.append(angle_difference)
-        # print('Robot yaw: ', robot_yaw, 'Angular positions: ', angular_positions)
+
         return angular_positions
     
     def get_landmark_expected_scan_ranges_indexes(self, robot_position, robot_yaw): 
@@ -146,10 +135,8 @@ class MapLocalisation:
         for angle in angular_positions:
             range_start_angle = np.mod(angle - self.search_range / 2 + 2*np.pi, 2*np.pi)
             range_end_angle = np.mod(angle + self.search_range / 2 + 2*np.pi, 2*np.pi)
-            # print(range_start_angle * 180 / np.pi, range_end_angle * 180 / np.pi)
             slice_start = self.lidar_idx_offset + int(range_start_angle // self.angle_increments)
             slice_end = self.lidar_idx_offset + int(range_end_angle // self.angle_increments)
-            # print(slice_start, slice_end)
             # Sanitize indexes
             slice_start = int(np.mod(slice_start, self.lidar_resolution))
             slice_end = int(np.mod(slice_end, self.lidar_resolution))
@@ -209,6 +196,9 @@ class MapLocalisation:
         """
         return np.dot(points, rotation_matrix.T) + translation_vector
 
+    def have_points_near_intersection(self, points, intersection, threshold = 0.2):
+        return np.any(np.linalg.norm(points - intersection, axis=1) < threshold)
+    
     def scan_callback(self, data):
         # Get scan data as np array
         scan = np.array(data.ranges)
@@ -221,9 +211,6 @@ class MapLocalisation:
 
         angular_ranges = self.get_landmark_expected_scan_ranges_indexes(robot_position, robot_yaw)
 
-        # To plot
-        # self.lines = np.empty((0, 2))
-        # self.points = np.empty((0, 2))
         self.located_landmarks = np.empty((0, 2))
 
         for i, (landmark, angular_range) in enumerate(zip(self.landmarks, angular_ranges)):
@@ -239,32 +226,33 @@ class MapLocalisation:
                                                       distance_threshold = self.ransac_d_threshold, 
                                                       min_inliers = self.min_ransac_inliers, 
                                                       max_n_lines = self.max_n_lines)
-            
-            # if self.visualize:
-            #     self.lines = np.concatenate((self.lines, lines))
-            #     self.points = np.concatenate((self.points, points))
 
             if len(lines) < 2:
-                # rospy.logwarn(f'Failed to detect 2 lines for {i}')
                 continue
 
             candidate_landmark = self.get_lines_intersection(lines[0], lines[1])
             distance_from_expected_landmark_position = np.linalg.norm(np.array(landmark) - candidate_landmark)
 
-            # print(f'Distance from expected landmark position: {np.round(distance_from_expected_landmark_position,3)}')
-            # print(f'Landmark {i} detected at position {candidate_landmark}')
-            # print(f'Landmark {i} expected at position {landmark}')
             if abs(distance_from_expected_landmark_position) < self.landmark_distance_threshold:
+                if self.have_points_near_intersection(inliers[0], inliers[1]):
+                    self.located_landmarks = np.concatenate((self.located_landmarks, candidate_landmark.reshape(1, 2)))
+                    pass
 
-                # print(f'Landmark {i} detected at position {candidate_landmark}')
-                self.located_landmarks = np.concatenate((self.located_landmarks, candidate_landmark.reshape(1, 2)))
-                pass
-            # else:
-                # rospy.logwarn(f'Landmark {i} not detected')
-                # pass
         if self.visualize:
             self.send_visualization_markers()
         
+        detections = PoseArray()
+        detections.header.frame_id = "map"
+        detections.header.stamp = rospy.Time.now()
+        for x, y in self.located_landmarks:
+            pose = Pose()
+            pose.position.x = x
+            pose.position.y = y
+            pose.orientation.w = 1.0
+            detections.append(pose)
+
+        self.landmark_pub.publish(detections)
+
     def send_visualization_markers(self):
         for i, landmark in enumerate(self.located_landmarks):
             marker = Marker()
@@ -280,41 +268,15 @@ class MapLocalisation:
             marker.scale.z = 0.15
             marker.pose.position.x = landmark[0]
             marker.pose.position.y = landmark[1]
-            marker.pose.position.z = 0.05
+            marker.pose.position.z = 0.15
             marker.color.r = 1.0
             marker.color.g = 1.0
             marker.color.b = 0.0
             marker.color.a = 1.0
             marker.lifetime = rospy.Duration(1)
 
-            self.landmark_publisher.publish(marker)
+            self.landmark_rviz_publisher.publish(marker)
 
-    # def update_plot(self, _):
-    #     if hasattr(self, 'points'):
-    #         self.scan_plot.set_data(self.points[:, 0], self.points[:, 1])
-        
-    #     while len(self.line_plots) > 0:
-    #         ln = self.line_plots.pop()
-    #         ln.remove()
-
-    #     if hasattr(self, 'lines'):
-    #         x = np.linspace(-4, 4, 100)
-    #         for line in self.lines:
-    #             y = line[0] * x + line[1]
-    #             ln, = self.ax.plot(x, y, 'r-', linewidth=2)
-    #             self.line_plots.append(ln)
-            
-                    # if self.have_points_near_intersection(self.inliers[i], intersection) and self.have_points_near_intersection(self.inliers[j], intersection):
-                    #     print(self.compute_angle_between_lines(self.lines[i], self.lines[j]))
-                    #     if np.abs(self.compute_angle_between_lines(self.lines[i], self.lines[j])) > 0.15:
-                    #        self.intersections.append(intersection)
-    
-    # def have_points_near_intersection(self, points, intersection, threshold = 0.25):
-    #     return np.any(np.linalg.norm(points - intersection, axis=1) < threshold)
-    
-    # def compute_angle_between_lines(self, line1, line2):
-    #     return np.arctan((line2[0] - line1[0]) / (1 + line1[0] * line2[0]))
-    
 if __name__ == '__main__':
     rospy.init_node('map_localisation')
 
@@ -323,6 +285,7 @@ if __name__ == '__main__':
     scan_topic = 'puzzlebot/scan'
     map_path = '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
     odom_topic = '/puzzlebot/odom'
+    landmark_topic = '/landmark_detections'
     lidar_resolution = 1147
     lidar_offset = np.radians(90) # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
     num_ransac_iterations = 50
@@ -330,8 +293,8 @@ if __name__ == '__main__':
     min_ransac_inliers = 50
     search_range = np.radians(60)
     inertial_frame_name = 'odom'
-    landmark_distance_threshold = 1.
-    map_localisator = MapLocalisation(scan_topic, map_path, odom_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold,
+    landmark_distance_threshold = 0.4
+    map_localisator = MapLocalisation(scan_topic, map_path, odom_topic, landmark_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold,
                                       search_range, num_ransac_iterations, ransac_d_threshold, min_ransac_inliers)
 
     rospy.spin()

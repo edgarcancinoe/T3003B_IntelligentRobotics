@@ -2,7 +2,6 @@
 
 import rospy
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 import cv2
 import cv2.aruco as aruco
 import numpy as np
@@ -11,6 +10,7 @@ import tf
 import tf.transformations as tft
 from geometry_msgs.msg import TransformStamped, Vector3, Quaternion, Transform, Polygon, Point, QuaternionStamped, PointStamped
 from std_msgs.msg import Header, Bool
+import base64
 
 class ArucoDetector:
     def __init__(self, aruco_size, camera_topic, camera_matrix, distortion_coeffs, inertial_frame_id,
@@ -22,8 +22,6 @@ class ArucoDetector:
         self.image_sub = rospy.Subscriber(camera_topic, Image, self._image_callback)
         self.reset_sub = rospy.Subscriber('/reset_vision', Bool, self._reset)
         self.corner_pub = rospy.Publisher(target_detection_topic, Polygon, queue_size=10)
-
-        self.bridge = CvBridge()
 
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
         self.parameters = aruco.DetectorParameters_create()
@@ -52,6 +50,12 @@ class ArucoDetector:
 
         rospy.Timer(rospy.Duration(3), self._verbose)
 
+    def _decode_compressed_img(self, frame):
+        """ Decode img and stream it if necessary. """
+        image_bytes = base64.b64decode(frame.data)
+        image_as_np = np.frombuffer(image_bytes, dtype=np.uint8).copy()
+        return cv2.imdecode(image_as_np, flags=1)     
+
     def _reset(self, _):
         self.knowledge = {}
         self.on_sight = []
@@ -68,7 +72,7 @@ class ArucoDetector:
 
     def _image_callback(self, frame):
         # Convert the image message to cv image
-        cv = self.bridge.imgmsg_to_cv2(frame, "bgr8")
+        cv = self._decode_compressed_img(frame)
         
         # Detect aruco markers
         corners, ids, _ = aruco.detectMarkers(cv2.cvtColor(cv, cv2.COLOR_BGR2GRAY), self.aruco_dict, parameters=self.parameters,

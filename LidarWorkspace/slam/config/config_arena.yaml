@@ -38,6 +38,10 @@ uncertainty_localisation:
   wl_topic: 'puzzlebot/wl'
   wr_topic: 'puzzlebot/wr'
 
+kalman_localisation:
+  wl_topic: 'puzzlebot/wl'
+  wr_topic: 'puzzlebot/wr'
+
 pose_controller:
   odom_topic: '/puzzlebot/odom'
 

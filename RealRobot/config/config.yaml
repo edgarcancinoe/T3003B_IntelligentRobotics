@@ -1,0 +1,95 @@
+
+camera_frame: 'camera_link'
+object_frame: 'aruco_box'
+robot_frame: 'base_link'
+inertial_frame: 'odom'
+target_id: 8
+aruco_size: 0.048
+desired_corner_locations: [[381., 435.], 
+                            [243., 435.], 
+                            [240., 301.], 
+                            [384., 302.]]
+
+z_desired: 0.18
+
+focal_length_pixel: 530.466941
+
+camera_matrix: [[530.466941, 0, 205], 
+                [0, 530.466941, 154], 
+                [0, 0, 1]]
+
+distortion_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+target_detection_topic: '/corners'
+ibvs_activate_topic: '/ibvs_activate'
+pose_control_activate_topic: '/pose_control_activate'
+orientation_control_activate_topic: '/orientation_control_activate'
+pose_controller_topic: '/goal_point'
+orientation_controller_topic: '/orientation_goals'
+camera_topic: '/puzzlebot/camera/image_raw'
+unlock_topic: '/unlock'
+lidar_topic: /puzzlebot/scan
+
+control_rate: 50
+navigator_rate: 50
+commands_topic: '/puzzlebot/base_controller/cmd_vel'
+odometry_topic: /puzzlebot/base_controller/odom
+sim_odom_topic: /puzzlebot/base_controller/odom
+
+# Will use the minimum of the two /max_v and /pose_controller/v_max
+max_v: 0.5
+max_w: 0.5
+
+# To ensure the physical wheels of the robot move: 
+# values in the range      min_w_to_move < w < min_w       will be assigned to w = min_w 
+
+# NOTE: this configuration will not make puzzlebot do perfect orientation changes, but we adapted it to work with the real puzzlebot as the
+# motors have different reactions to the same angular velocity.
+
+min_w_to_move: 0.0235 # The minimum angular velocity to consider that the controller is still trying to move the robot
+min_w: 0.08 # The minimum angular velocity to make sure both motors are moving
+
+pose_controller:
+  odom_topic: /puzzlebot/base_controller/odom
+
+  # Control parameters
+  k1: .8
+  k2: 5
+  beta: 0.9
+  lambda_: 1.15
+  v_max: 0.5
+
+  # Tolerances
+  r_tolerance: 0.04
+  
+ibvs_controller:
+  # Proportional controller
+  kp: 0.3
+  # Tolerances
+  e_tolerance: 30
+
+orientation_controller:
+  odom_topic: '/puzzlebot/base_controller/odom'
+  kp: 1.2
+  ki: 0.4
+  e_tolerance: 0.05
+  
+uncertainty_localisation:
+  k_l: 2.58
+  k_r: 2.58
+
+bug_navigator:
+  # Frontal tolerance should be grater than horizontal tolerance
+  # and horizontal tolerance should be grater than the robot's side length
+  frontal_tolerance: 0.25
+  horizontal_tolerance: 0.18
+  
+  lidar_resolution: 360 # 360, 720, 1080
+
+  v: 0.135
+  w: 0.5
+
+  bug2:
+    min_d_hitpoint: 0.04
+
+  
