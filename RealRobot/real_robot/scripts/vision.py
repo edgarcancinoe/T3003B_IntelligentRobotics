@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import rospy
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
 import cv2
 import cv2.aruco as aruco
 import numpy as np
@@ -17,13 +17,13 @@ class ArucoDetector:
                  camera_frame_id, object_frame_id, 
                  target_id, target_detection_topic, 
                  stream_video=True, verbose=True, 
-                 target_samples_required: int = 150):
+                 target_samples_required: int = 100):
         
-        self.image_sub = rospy.Subscriber(camera_topic, Image, self._image_callback)
+        self.image_sub = rospy.Subscriber(camera_topic, CompressedImage, self._image_callback)
         self.reset_sub = rospy.Subscriber('/reset_vision', Bool, self._reset)
         self.corner_pub = rospy.Publisher(target_detection_topic, Polygon, queue_size=10)
 
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
+        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
         self.parameters = aruco.DetectorParameters_create()
 
         self.stream_video = stream_video
@@ -47,14 +47,14 @@ class ArucoDetector:
         # Target knowledge buffer
         self.target_positions = []
         self.target_samples_required = target_samples_required
-
+        rospy.sleep(2)
         rospy.Timer(rospy.Duration(3), self._verbose)
 
     def _decode_compressed_img(self, frame):
         """ Decode img and stream it if necessary. """
-        image_bytes = base64.b64decode(frame.data)
-        image_as_np = np.frombuffer(image_bytes, dtype=np.uint8).copy()
-        return cv2.imdecode(image_as_np, flags=1)     
+        np_arr = np.frombuffer(frame.data, np.uint8)
+        image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        return image
 
     def _reset(self, _):
         self.knowledge = {}
@@ -77,7 +77,6 @@ class ArucoDetector:
         # Detect aruco markers
         corners, ids, _ = aruco.detectMarkers(cv2.cvtColor(cv, cv2.COLOR_BGR2GRAY), self.aruco_dict, parameters=self.parameters,
                                                               cameraMatrix=self.camera_matrix, distCoeff = self.distortion_coeffs)
-        
         ids = ids.flatten() if ids is not None else []
 
         # Objects detected
@@ -108,6 +107,7 @@ class ArucoDetector:
             if len(self.target_positions) < self.target_samples_required:
                 self.target_positions.append((tvec, rvec, corners[i][0]))
                 continue
+
             elif len(self.target_positions) == self.target_samples_required:
                 self.target_positions.append((tvec, rvec, corners[i][0])) # Ensure that the last sample is included so that transform is not sent again
                 median_tvec = np.median([pos[0] for pos in self.target_positions], axis=0)
@@ -122,6 +122,7 @@ class ArucoDetector:
                                                                  QuaternionStamped(header=Header(stamp=rospy.Time(0), frame_id=self.camera_frame_id),
                                                                                                     quaternion=Quaternion(*median_quat)))
 
+                print('Found at:',tvec_inertial)
                 self.tf_broadcaster.sendTransform(TransformStamped(
                     header=Header(stamp=rospy.Time(0), frame_id=self.inertial_frame_id),
                     child_frame_id=self.object_frame_id,
@@ -136,11 +137,6 @@ class ArucoDetector:
             self.corner_pub.publish(Polygon(
                 points=[Point(x=corner[0], y=corner[1], z=tvec[2]) for corner in corners[i][0]]
             ))
-
-
-        if self.stream_video:
-            cv2.imshow('Detector', cv)
-            cv2.waitKey(3)
 
 if __name__ == '__main__':
 
@@ -165,7 +161,7 @@ if __name__ == '__main__':
                        object_frame_id, 
                        target_id,
                        target_detection_topic, 
-                       stream_video=True)
+                       stream_video=False)
     try:
         rospy.logwarn('Aruco detector running')
         rospy.spin()

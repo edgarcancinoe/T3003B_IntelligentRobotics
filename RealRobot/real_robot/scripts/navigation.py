@@ -47,7 +47,7 @@ class Navigator:
         self.search_exhausted = False
 
         # Class variables
-        alignment_offset = 0.6
+        alignment_offset = 0.25
         self.alignment_point_target_frame = Point(*[0.0, 0.0, alignment_offset])
 
         # Initialize the subscribers

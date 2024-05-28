@@ -3,10 +3,11 @@
 import rospy
 import numpy as np
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Vector3, Twist, Polygon
-import tf
+from geometry_msgs.msg import Vector3, Twist, Polygon, TransformStamped
+import tf2_ros
 import tf.transformations as tft
 import math
+
 class Puzzlebot_Visual_Controller():
     def __init__(self, kp, desired_corner_locations, z_desired, focal_length_pixel,
                  error_tolerance, commands_topic, input_topic, ibvs_activate_topic, 
@@ -37,20 +38,31 @@ class Puzzlebot_Visual_Controller():
         rospy.Subscriber(input_topic, Polygon, self.vision_callback)
         rospy.Subscriber(ibvs_activate_topic, Bool, self._activate_controller)
 
-        self.tf_listener = tf.TransformListener()
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         
-        # Transformation stuff
-        self.tf_listener.waitForTransform(camera_frame, robot_frame, rospy.Time(0), rospy.Duration(4.0))
-        tvec, rvec = self.tf_listener.lookupTransform(camera_frame, robot_frame, rospy.Time(0))
-        R_r_c = tft.quaternion_matrix([rvec[0], rvec[1], rvec[2], rvec[3]])[:3, :3]
-    
-        skew_symm_t = np.array([[0, -tvec[2], tvec[1]],
-                                [tvec[2], 0, -tvec[0]],
-                                [-tvec[1], tvec[0], 0]])  
-        
-        self.V_r_c_inv = np.linalg.inv(np.concatenate([np.concatenate([R_r_c, skew_symm_t @ R_r_c], axis=1),
-                                     np.concatenate([np.zeros((3, 3)), R_r_c], axis=1)], axis=0))
-        
+        rospy.sleep(4.0)  # Wait for tf2 to initialize
+
+        found = False
+        while not found:
+            try:
+                trans = self.tf_buffer.lookup_transform(camera_frame, robot_frame, rospy.Time(0), rospy.Duration(4.0))
+                tvec = [trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z]
+                rvec = [trans.transform.rotation.x, trans.transform.rotation.y, trans.transform.rotation.z, trans.transform.rotation.w]
+                R_r_c = tft.quaternion_matrix(rvec)[:3, :3]
+            
+                skew_symm_t = np.array([[0, -tvec[2], tvec[1]],
+                                        [tvec[2], 0, -tvec[0]],
+                                        [-tvec[1], tvec[0], 0]])  
+                
+                self.V_r_c_inv = np.linalg.inv(np.concatenate([np.concatenate([R_r_c, skew_symm_t @ R_r_c], axis=1),
+                                            np.concatenate([np.zeros((3, 3)), R_r_c], axis=1)], axis=0))
+                found = True
+                rospy.loginfo('Transform found')
+            
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                rospy.logerr("Could not find the transformation. Retrying...")
+
         self.active = False
 
         rospy.Timer(rospy.Duration(1.0/control_rate), self.compute_output)    
@@ -58,16 +70,18 @@ class Puzzlebot_Visual_Controller():
     
     def _activate_controller(self, msg):
         self.active = msg.data
+        if self.active:
+            rospy.loginfo('IBVS controller activated.')
 
-    def _compute_errors(self) -> np.ndarray: # Should return a nx1 array n = 8
+    def _compute_errors(self) -> np.ndarray:
         # Compute errors
         e = self.p_desired - self.p
         return e
     
     def _jp_matrix(self, v, u, z):
-        z = (z + self.z_desired)/2
-        j_p = np.array([[u/z, -(self.focal_length_pixel+u**2/self.focal_length_pixel)],
-                        [v/z, -u*v/self.focal_length_pixel]])
+        z = (z + self.z_desired) / 2
+        j_p = np.array([[u/z, -(self.focal_length_pixel + u**2 / self.focal_length_pixel)],
+                        [v/z, -u * v / self.focal_length_pixel]])
         return j_p
     
     def _inv_jacobian_matrix(self, u, v, z):
@@ -79,15 +93,14 @@ class Puzzlebot_Visual_Controller():
         return np.linalg.pinv(J)
     
     def euler_to_quaternion(self, roll, pitch, yaw):
-        qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-        qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-        qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-        qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+        qx = np.sin(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) - np.cos(roll / 2) * np.sin(pitch / 2) * np.sin(yaw / 2)
+        qy = np.cos(roll / 2) * np.sin(pitch / 2) * np.cos(yaw / 2) + np.sin(roll / 2) * np.cos(pitch / 2) * np.sin(yaw / 2)
+        qz = np.cos(roll / 2) * np.cos(pitch / 2) * np.sin(yaw / 2) - np.sin(roll / 2) * np.sin(pitch / 2) * np.cos(yaw / 2)
+        qw = np.cos(roll / 2) * np.cos(pitch / 2) * np.cos(yaw / 2) + np.sin(roll / 2) * np.sin(pitch / 2) * np.sin(yaw / 2)
 
         return [qx, qy, qz, qw]
 
     def _quaternion_to_euler(self, x, y, z, w):
-
         # Compute roll (x-axis rotation)
         sinr_cosp = 2 * (w * x + y * z)
         cosr_cosp = 1 - 2 * (x * x + y * y)
@@ -116,43 +129,44 @@ class Puzzlebot_Visual_Controller():
     def compute_output(self, _):
         if not self.active:
             return
-        # Control output initialization
-        twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
-                            angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
-        
+                
         # Proportional error
         flag = False
         if self.p is not None:
             e = self._compute_errors()
             if np.linalg.norm(e) <= self.error_tolerance:
-                rospy.logwarn('Goal reached')
+                rospy.logwarn('IBVS Goal reached')
 
             else:
                 # Compute cameras desired velocity for state s: [v*_x, v*_y, w*] (CAMERA FRAME)
                 u = [self.p[0], self.p[2], self.p[4], self.p[6]]
                 v = [self.p[1], self.p[3], self.p[5], self.p[7]]
 
-                s_dot = self.kp * self._inv_jacobian_matrix(u, v, self.z_values) @ e # 2x1 array [v_z, w_y] in camera frame
+                s_dot = self.kp * self._inv_jacobian_matrix(u, v, self.z_values) @ e  # 2x1 array [v_z, w_y] in camera frame
                 
                 # Compute the desired linear and angular velocities in the robot frame
                 xi_dot_c = np.array([0.0, 0.0, s_dot[0], 0.0, s_dot[1], 0.0])
                 xi_dot_r = self.V_r_c_inv @ xi_dot_c
 
-                # TODO: get w* in the robot frame
+                twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
+                            angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
 
-                twist_msg.linear.x = xi_dot_r[0] 
-                twist_msg.angular.z = xi_dot_r[5]  * 2.8 
+                twist_msg.linear.x = xi_dot_r[0]
+                twist_msg.angular.z = xi_dot_r[5] * 0.6
 
                 self.no_target_on_sight = False
                 flag = True
         
-        if not flag and not self.no_target_on_sight:
+        if not flag and self.no_target_on_sight:
+            print(flag, self.no_target_on_sight)
+            twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
+                            angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
             self.cmd_vel_publisher.publish(twist_msg)
             self.no_target_on_sight = True
         elif flag:
             self.cmd_vel_publisher.publish(twist_msg)
         # Reset state
-        self.p = None
+        # self.p = None
 
 
 if __name__=='__main__':
@@ -172,6 +186,7 @@ if __name__=='__main__':
     kp = rospy.get_param('~kp')
     e_tolerance = rospy.get_param('~e_tolerance')
     send_done_topic = rospy.get_param('/unlock_topic', 'unlock')
+
     # Initialize controller
     puzzlebot_controller = Puzzlebot_Visual_Controller(kp=kp, 
                                                         desired_corner_locations = desired_corner_locations,
@@ -191,4 +206,3 @@ if __name__=='__main__':
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
-
