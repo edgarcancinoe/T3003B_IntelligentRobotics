@@ -174,7 +174,10 @@ class MapLocalisation:
             sample_indices = random.sample(range(len(points)), 2)
             sample = points[sample_indices]
 
-            line = np.polyfit(sample[:, 0], sample[:, 1], 1)
+            try:
+                line = np.polyfit(sample[:, 0], sample[:, 1], 1)
+            except np.linalg.LinAlgError:
+                break
             distances = np.abs(line[0] * points[:, 0] - points[:, 1] + line[1]) / np.sqrt(line[0]**2 + 1)
             inliers = points[distances < distance_threshold]
 
@@ -256,7 +259,7 @@ class MapLocalisation:
             # print(f'Landmark {i} expected at position {landmark}')
             if abs(distance_from_expected_landmark_position) < self.landmark_distance_threshold:
 
-                # print(f'Landmark {i} detected at position {candidate_landmark}')
+                print(f'Landmark {i} detected at position {candidate_landmark}')
                 self.located_landmarks = np.concatenate((self.located_landmarks, candidate_landmark.reshape(1, 2)))
                 pass
             # else:
@@ -320,17 +323,17 @@ if __name__ == '__main__':
 
     # Set parameters and create map localisation object
 
-    scan_topic = 'puzzlebot/scan'
-    map_path = '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
+    scan_topic = '/scan'
+    map_path = '/home/puzzlebot/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/real_arena_landmarks.yaml'
     odom_topic = '/puzzlebot/odom'
     lidar_resolution = 1147
-    lidar_offset = np.radians(90) # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
-    num_ransac_iterations = 50
+    lidar_offset = -np.radians(90) # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
+    num_ransac_iterations = 70
     ransac_d_threshold = 0.025
-    min_ransac_inliers = 50
+    min_ransac_inliers = 30
     search_range = np.radians(60)
     inertial_frame_name = 'odom'
-    landmark_distance_threshold = 1.
+    landmark_distance_threshold = .4
     map_localisator = MapLocalisation(scan_topic, map_path, odom_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold,
                                       search_range, num_ransac_iterations, ransac_d_threshold, min_ransac_inliers)
 

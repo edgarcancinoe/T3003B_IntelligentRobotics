@@ -1,0 +1,18 @@
+names: ['corner1', 'corner2', 'corner3', 'corner4']
+# names: ['corner1']
+
+corner1:
+  x: 2.874
+  y: 2.487
+
+corner2:
+  x: 2.487
+  y: -1.21
+
+corner3:
+  x: -0.54
+  y: -1.21
+
+corner4:
+  x: -0.54
+  y: 2.487

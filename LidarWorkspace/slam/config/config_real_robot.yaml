@@ -33,6 +33,15 @@ navigator_rate: 50
 commands_topic: '/cmd_vel'
 odometry_topic: '/odom'
 sim_odom_topic: '/odom'
+
+uncertainty_localisation:
+  wl_topic: 'wl'
+  wr_topic: 'wr'
+
+kalman_localisation:
+  wl_topic: 'wl'
+  wr_topic: 'wr'
+
 pose_controller:
   odom_topic: '/odom'
 
