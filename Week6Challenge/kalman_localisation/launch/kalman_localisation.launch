@@ -2,8 +2,6 @@
 <launch>
         <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] [${node}]: ${message}"/>
         
-        <include file="$(find slam)/launch/rviz.launch"></include>
-
         <!-- Include puzzlebot gazebo world launch -->
         <include file="$(find puzzlebot_gazebo)/launch/puzzlebot_gazebo.launch">
             <arg name="pos_x" value="0.0"/>
@@ -11,17 +9,20 @@
             <arg name="pos_theta" value="0.0"/>
         </include>
 
+        <include file="$(find slam)/launch/rviz.launch"></include>
 
         <!-- Send static transform -->
-        <node pkg="tf2_ros" type="static_transform_publisher" name="odom_base_joint" args="0 0 0 0 0 0 map odom"/>
-        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 odom puzzlebot/base_footprint"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom_joint" args="0 0 0 0 0 0 map odom"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="odom_to_base_link" args="0 0 0.05 0 0 0 odom puzzlebot/base_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_base_footprint" args="0 0 0.05 0 0 0 puzzlebot/base_link puzzlebot/base_footprint"/>
         <node pkg="tf2_ros" type="static_transform_publisher" name="laser" args="0 0 0 0 0 0 puzzlebot/lidar_link laser_link"/>
 
-        <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
 
         <rosparam file="$(find slam)/config/config_arena.yaml" command="load" />
 
         <!-- Launch nodes -->
+        <node pkg="kalman_localisation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
         <node pkg="kalman_localisation" type="kalman_localisation.py" name="kalman_localisation" output="screen"/>
+        <!-- <node pkg="uncertainties" type="uncertainty_localisation.py" name="uncertainty_localisation" output="screen"/> -->
         <node pkg="slam" type="map_localisation.py" name="map_localisation" output="screen"/>
 </launch>

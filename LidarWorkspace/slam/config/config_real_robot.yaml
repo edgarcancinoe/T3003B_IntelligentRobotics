@@ -37,7 +37,8 @@ sim_odom_topic: '/odom'
 uncertainty_localisation:
   wl_topic: 'wl'
   wr_topic: 'wr'
-
+  odometry_topic: '/odom'
+  
 kalman_localisation:
   wl_topic: 'wl'
   wr_topic: 'wr'

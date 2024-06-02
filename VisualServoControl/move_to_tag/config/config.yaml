@@ -48,7 +48,7 @@ pose_controller:
   
 ibvs_controller:
   # Proportional controller
-  kp: 0.44
+  kp: 0.32
   # Tolerances
   e_tolerance: 30
 

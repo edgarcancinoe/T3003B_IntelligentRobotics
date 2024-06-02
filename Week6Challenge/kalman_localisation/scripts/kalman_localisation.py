@@ -2,7 +2,7 @@
 import rospy
 import message_filters
 from std_msgs.msg import Float32, Header
-from geometry_msgs.msg import Vector3, Point, Quaternion, Pose, Twist, PoseWithCovariance, TwistWithCovariance
+from geometry_msgs.msg import Vector3, Point, Quaternion, Pose, Twist, PoseWithCovariance, TwistWithCovariance, PoseArray
 from nav_msgs.msg import Odometry
 import numpy as np
 from puzzlebot_util.util import *
@@ -11,10 +11,12 @@ import yaml
 
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
-    def __init__(self, odometry_topic, inertial_frame_name, robot_frame_name, 
+    def __init__(self, odometry_topic, map_topic, odom_frame, map_frame, robot_frame_name, 
                  wheel_radius, track_length, starting_state, map_path, odom_rate, k_l, k_r, wl, wr):
                 
-        self.frame_id = inertial_frame_name
+        self.odom_frame = odom_frame
+        self.map_frame = map_frame
+
         self.child_frame_id = robot_frame_name
         
         # Robot parameters
@@ -22,18 +24,15 @@ class Locater():
         self.l = track_length
 
         # Initial state variables at inertial state
-        self.sx = starting_state['x']
-        self.sy = starting_state['y']
-        self.stheta = starting_state['theta']
+        self.mu = [starting_state['x'], starting_state['y'], starting_state['theta']]
 
         # Uncertainty parameters
         self.k_l = k_l
         self.k_r = k_r
 
         # Initial covariance matrix
-        self.sigma = np.ndarray(shape=(3,3))
-        self.sigma.fill(0.0)
-        
+        self.sigma = np.zeros((3, 3))
+
         # Velocities (robot frame)
         self.v = 0.0
         self.w = 0.0
@@ -49,12 +48,17 @@ class Locater():
         # Publisher
         rospy.logwarn('Publishing to ' + odometry_topic + ' topic for estimated pose (DR odometry)')
         self.odom_publisher = rospy.Publisher(odometry_topic, Odometry, queue_size=10)
+        self.map_publisher = rospy.Publisher(map_topic, Odometry, queue_size=10)
 
         # wl wr Subscriber
         rospy.logwarn('Subscribing to /wl and /wr topics for wheel velocities')
         wlsub = message_filters.Subscriber(wl, Float32)
         wrsub = message_filters.Subscriber(wr, Float32)
-
+        
+        # Landmark detection managment
+        self.landmark_suscriber = rospy.Subscriber('/detected_landmarks', PoseArray, self._landmark_detection_callback)
+        self.detected_landmarks = {}
+        
         # Synchronizer
         ts = message_filters.ApproximateTimeSynchronizer([wlsub, wrsub], queue_size=10, slop=1.0/odom_rate, allow_headerless=True)
         ts.registerCallback(self._w_callback)
@@ -64,15 +68,29 @@ class Locater():
         rospy.Timer(rospy.Duration(1.0/odom_rate), self.step)
         self.last_timestamp = rospy.Time.now()
 
-    def _publishOdom(self):
-        self.odom_publisher.publish(Odometry(
-            header = Header(frame_id = self.frame_id, stamp = rospy.Time.now()),
+    def _landmark_detection_callback(self, detecection_array):
+        
+        self.detected_landmarks = {}
+        for i, detection in enumerate(detecection_array.poses):
+
+            # Find which landmark is the closest to the detection
+            min_distance = float('inf')
+            for j, landmark in enumerate(self.landmarks):
+                distance = np.linalg.norm(np.array([detection.position.x, detection.position.y]) - landmark)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_landmark = j
+            self.detected_landmarks[closest_landmark] = detection
+        
+    def _publishMap(self):
+        self.map_publisher.publish(Odometry(
+            header = Header(frame_id = self.map_frame, stamp = rospy.Time.now()),
             child_frame_id = self.child_frame_id,
             # Pose in inertial frame (world_frame)
             pose = PoseWithCovariance(
                 pose = Pose(
-                    position = Point(x = self.sx, y = self.sy, z = 0.0),
-                    orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, self.stheta))
+                    position = Point(x = self.mu[0], y = self.mu[1], z = 0.0),
+                    orientation = Quaternion(*tft.quaternion_from_euler(0.0, 0.0, self.mu[2]))
                 ),
                 covariance = np.array([self.sigma[0,0], self.sigma[0,1], 0.0, 0.0, 0.0, self.sigma[0,2],
                                        self.sigma[1,0], self.sigma[1,1], 0.0, 0.0, 0.0, self.sigma[1,2],
@@ -90,7 +108,7 @@ class Locater():
                 covariance = None
             )
         ))
-       
+
     def _w_callback(self, wl, wr):
         if self.listening:
             self.v, self.w = np.dot(self.decodematrix, np.array([wr.data, wl.data]).T).flatten()
@@ -134,14 +152,14 @@ class Locater():
         """
         # X is the state vector X = [x, y, theta]
         deltaX = self._rk4_delta(theta, v, w, dt)
-        return np.array([self.sx + deltaX[0], self.sy + deltaX[1], self.stheta + deltaX[2]])
+        return np.array([self.mu[0] + deltaX[0], self.mu[1] + deltaX[1], self.mu[2] + deltaX[2]])
     
     def _noise_propagation_matrix(self, dt):
         """
             Nabla matrix used to propagate the wheel speed noise in the system
         """
-        return (1/2.0) * self.r * dt * np.array([[np.cos(self.stheta), np.cos(self.stheta)],
-                                                [np.sin(self.stheta), np.sin(self.stheta)],
+        return (1/2.0) * self.r * dt * np.array([[np.cos(self.mu[2]), np.cos(self.mu[2])],
+                                                [np.sin(self.mu[2]), np.sin(self.mu[2])],
                                                 [2/self.l, -2/self.l]])
     
     def _get_pose_covariance_matrix(self, dt):
@@ -156,59 +174,91 @@ class Locater():
     
     def _g(self, dx, dy, theta):
         """
-            Observation model. [rho, alpha] is the measurement vector that consists of landamrk angle and bearing in robot frame.
-            g(x, y, theta, landmark) = [rho, alpha]
+        Observation model. [rho, alpha] is the measurement vector that consists of landmark angle and bearing in robot frame.
+        g(x, y, theta, landmark) = [rho, alpha].T
+        returns [g1, g2, ... , gN] = [sqrt(rho1), alpha1, sqrt(rho2), alpha2, ... , sqrt(rhoN), alphaN]
         """
         rho = np.sqrt(dx**2 + dy**2)
         alpha = np.arctan2(dy, dx) - theta
-        return np.array([rho, alpha]).T
+        return np.vstack((rho, alpha)).T.flatten()
     
-    def _jacobianG(self, dx, dy):
+    def _jacobianG(self, dx, dy, observation_model):
         """
-            Get the Jacobian matrix of the observation model
-            G_k = [-dx/rho, -dy/rho, 0]
-                  [dy/rho^2, -dx/rho^2, -1]
+        Get the Jacobian matrix of the observation model
+        G_i_k = [-dx/rho, -dy/rho, 0]
+                [dy/rho^2, -dx/rho^2, -1]
+
+        Inputs:
+        - dx
+        - dy
+        - observation model vector [sqrt_rho_1, alpha_1, ... , sqrt_rho_n, alpha_n]
         """
-       
-        rho = dx**2 + dy**2
-        rho_sqrt = np.sqrt(rho)
-        print(rho, rho_sqrt)
-        return np.array([[-dx/rho_sqrt, -dy/rho_sqrt, 0],
-                         [dy/rho, -dx/rho, -1]])
+        rho = observation_model[::2]  # Extract rho values from the observation model
+        Gk = np.zeros((2 * len(dx), 3))
+        
+        Gk[::2, 0] = -dx / rho
+        Gk[::2, 1] = -dy / rho
+        Gk[::2, 2] = 0
+        
+        Gk[1::2, 0] = dy / (rho**2)
+        Gk[1::2, 1] = -dx / (rho**2)
+        Gk[1::2, 2] = -1
+        
+        return Gk
 
     def step(self, _):
+        # Define useful matrices based on detected landmarks
+        landmarks_on_sight = list(self.detected_landmarks.keys())
+        landmarks_on_sight_map_positions = self.landmarks[landmarks_on_sight]
+        landmarks_on_sight_measured_positions = np.array([[landmark.position.x, landmark.position.y] for landmark in self.detected_landmarks.values()])
+        
         # Get dt
         dt = self._get_dt()
+
+        # No landmark detection, usual odometry
+
         # Get estimated position of the robot
-        miu_hat_k = self._h(self.stheta, self.v, self.w, dt)
+        mu_hat = self._h(self.mu[2], self.v, self.w, dt)
         # Calculate the linearised model to be used in the uncertainty propagation
-        H_k = self._jacobianH(self.stheta, self.v, dt)
+        H_k = self._jacobianH(self.mu[2], self.v, dt)
         # Compute Q_k
         Q_k = self._get_pose_covariance_matrix(dt)
         # Propagate the uncertainty
         sigma_hat = H_k @ self.sigma @ H_k.T + Q_k
-        # Robot observation model
-        dx = self.landmarks[:,0] - miu_hat_k[0]
-        dy = self.landmarks[:,1] - miu_hat_k[1]
-        z_hat_k = self._g(dx, dy, self.stheta)
-        # Compute the Jacobian matrix of the observation model G_k
-        G_k = self._jacobianG(dx, dy)
-        # Zk: Uncertainty propagation
-        Z_k = G_k @ sigma_hat @ G_k.T + np.eye(2) * 0.01 # PENDIENTE DE REVISAR: OBSERVATION MODEL COVARIANCE MATRIX
-        # K_k: Kalman Gain
-        K_k = sigma_hat @ G_k.T @ np.linalg.inv(Z_k)
+    
+        if len(landmarks_on_sight_measured_positions) > 0:
+            z_k = np.array([np.linalg.norm(landmarks_on_sight_measured_positions - np.array([self.mu[0], self.mu[1]]), axis=1),
+                            np.arctan2(landmarks_on_sight_measured_positions[:,1] - self.mu[1], landmarks_on_sight_measured_positions[:,0] - self.mu[0]) - self.mu[2]]).T.flatten()
+            
+            # Robot observation model
+            dx = landmarks_on_sight_map_positions[:,0] - mu_hat[0]
+            dy = landmarks_on_sight_map_positions[:,1] - mu_hat[1]
+            z_hat_k = self._g(dx.T, dy.T, mu_hat[2])
 
-        # 10.
+            if z_k.shape != z_hat_k.shape:
+                rospy.logerr('Skipping because z_k and z_hat_k have different shapes.')
+                return
 
-        # # Update the state variables
-        # self.sx = 
-        # self.sy =
-        # self.stheta = 
-        # self.sigma = 
+            # Compute the Jacobian matrix of the observation model G_k
+            G_k = self._jacobianG(dx, dy, z_hat_k) # (8x3)
+            # Zk: Uncertainty propagation
+            # (8x3)(3x3) (3x8) = (3,8)
+            Z_k = G_k @ sigma_hat @ G_k.T + np.eye(2*len(landmarks_on_sight)) * 4.5 
+            # K_k: Kalman Gain
+            K_k = sigma_hat @ G_k.T @ np.linalg.pinv(Z_k) # (3,8)
+            
+            # Update the state variables
+            # (3x1) = (3x1) + (3,8)(8,1)
+            self.mu = mu_hat + K_k @ (z_k - z_hat_k)
+            self.sigma = (np.eye(3) - K_k @ G_k) @ sigma_hat  
+            # print(np.linalg.norm(self.sigma))
+        else:
+            self.mu = mu_hat
+            self.sigma = sigma_hat
 
         # Publish odometry message (pose and uncertainty)
-        self._publishOdom() # MAYBE ALSO PUBLISH MAP TRANSFOM OR SIMILAR
-        
+        self._publishMap()
+
         self.listening = True
 
     def load_map(self, map_path):
@@ -233,16 +283,18 @@ if __name__ == '__main__':
     params = get_global_params()
     map_path = '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
 
-    locater = Locater(odometry_topic=params['odometry_topic'], 
-                      inertial_frame_name=params['inertial_frame_name'],
+    locater = Locater(odometry_topic=rospy.get_param('/odometry_topic'), 
+                      map_topic = rospy.get_param('/map_topic'),
+                      odom_frame=rospy.get_param('/odom_frame'),
+                      map_frame=rospy.get_param('/map_frame'),
                       robot_frame_name=params['robot_frame_name'], 
                       wheel_radius=params['wheel_radius'],
                       track_length=params['track_length'], 
                       starting_state=params['starting_state'],
                       map_path=map_path,
-                      odom_rate=params['odom_rate'],
-                      k_l=rospy.get_param('~k_l', 0.0),
-                      k_r=rospy.get_param('~k_r', 0.0),
+                      odom_rate=rospy.get_param('~odom_rate'),
+                      k_l=rospy.get_param('~k_l'),
+                      k_r=rospy.get_param('~k_r'),
                       wl=rospy.get_param('~wl_topic'),
                       wr=rospy.get_param('~wr_topic'))
 

@@ -1,8 +1,11 @@
 
 camera_frame: 'camera_link'
 object_frame: 'aruco_box'
-robot_frame: 'puzzlebot/base_footprint'
+robot_frame: 'puzzlebot/base_link'
 inertial_frame: 'odom'
+odom_frame: 'odom'
+map_frame: 'map'
+
 target_id: 8
 aruco_size: 0.048
 desired_corner_locations: [[381., 435.], 
@@ -32,15 +35,21 @@ control_rate: 50
 navigator_rate: 50
 commands_topic: '/puzzlebot/base_controller/cmd_vel'
 odometry_topic: '/puzzlebot/odom'
+map_topic: '/map'
 sim_odom_topic: '/puzzlebot/odom'
 
 uncertainty_localisation:
   wl_topic: 'puzzlebot/wl'
   wr_topic: 'puzzlebot/wr'
-
+  odom_rate: 60
+  k_l: 0.012
+  k_r: 0.012
 kalman_localisation:
   wl_topic: 'puzzlebot/wl'
   wr_topic: 'puzzlebot/wr'
+  k_l: 0.3
+  k_r: 0.3
+  odom_rate: 60
 
 pose_controller:
   odom_topic: '/puzzlebot/odom'

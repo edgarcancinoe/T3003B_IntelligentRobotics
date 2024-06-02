@@ -4,9 +4,9 @@
         <include file="$(find rosserial_puzzlebot)/launch/puzzlebot_autostart.launch"></include>
         <!-- Send static transform -->
         <node pkg="tf2_ros" type="static_transform_publisher" name="odom_base_joint" args="0 0 0 0 0 0 map odom"/>
-        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 odom base_link"/>
-        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_link" args="0 0 0.1 0 0 0 base_link lidar_link"/>
-        <node pkg="tf2_ros" type="static_transform_publisher" name="laser" args="0 0 0 3.1415926535 0 0 lidar_link laser"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="base_joint" args="0 0 0.1 0 0 0 odom base_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 base_link lidar_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="laser_joint" args="0 0 0 3.1415926535 0 0 lidar_link laser"/>
 
         <node pkg="rviz_simulation" type="joint_state_pub.py" name="joint_state_pub" output="screen"/>
         

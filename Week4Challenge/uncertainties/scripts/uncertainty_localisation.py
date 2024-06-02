@@ -172,22 +172,21 @@ class Locater():
         
         self.listening = True
 
-
 if __name__ == '__main__':
     rospy.init_node('uncertainty_localisation')
 
     # Get Global ROS parameters
     params = get_global_params()
 
-    locater = Locater(odometry_topic=params['odometry_topic'], 
+    locater = Locater(odometry_topic=rospy.get_param('/odometry_topic', params['odometry_topic']), 
                       inertial_frame_name=params['inertial_frame_name'],
                       robot_frame_name=params['robot_frame_name'], 
                       wheel_radius=params['wheel_radius'],
                       track_length=params['track_length'], 
                       starting_state=params['starting_state'],
-                      odom_rate=params['odom_rate'],
-                      k_l=rospy.get_param('~k_l', 0.0),
-                      k_r=rospy.get_param('~k_r', 0.0),
+                      odom_rate=rospy.get_param('~odom_rate'),
+                      k_l=rospy.get_param('~k_l'),
+                      k_r=rospy.get_param('~k_r'),
                       wl=rospy.get_param('~wl_topic'),
                       wr=rospy.get_param('~wr_topic'))
 
