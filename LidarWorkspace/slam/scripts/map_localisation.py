@@ -338,7 +338,7 @@ if __name__ == '__main__':
     # Set parameters and create map localisation object
 
     scan_topic = rospy.get_param('~scan_topic')
-    map_path = rospy.get_param('~map_path')
+    map_path = rospy.get_param('/map_path')
     odom_topic = rospy.get_param('~odom_topic')
     lidar_resolution = rospy.get_param('~lidar_resolution')
     lidar_offset = np.radians(rospy.get_param('~lidar_offset')) # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.

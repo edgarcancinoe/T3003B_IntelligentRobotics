@@ -33,26 +33,40 @@ unlock_topic: '/unlock'
 control_rate: 50
 navigator_rate: 50
 commands_topic: '/cmd_vel'
-odometry_topic: '/odom'
-sim_odom_topic: '/odom'
+odometry_topic: '/map'
+# sim_odom_topic: '/odom'
 map_topic: '/map'
 
 uncertainty_localisation:
   wl_topic: 'wl'
   wr_topic: 'wr'
-  k_l: 0.012
-  k_r: 0.012
+  k_l: 0.25
+  k_r: 0.25
   odom_rate: 60
+
+
+map_path: '/home/puzzlebot/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/real_arena_landmarks.yaml'
+map_localisation:
+  scan_topic: '/scan'
+  odom_topic: '/map'
+  lidar_resolution: 1147
+  lidar_offset: -90 # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
+  num_ransac_iterations: 75
+  ransac_d_threshold: 0.06
+  min_ransac_inliers: 60
+  search_range: 60
+  inertial_frame_name: 'map'
+  landmark_distance_threshold: 0.25
 
 kalman_localisation:
   wl_topic: 'wl'
   wr_topic: 'wr'
-  k_l: 0.3
-  k_r: 0.3
+  k_l: 0.05
+  k_r: 0.05
   odom_rate: 60
 
 pose_controller:
-  odom_topic: '/odom'
+  odom_topic: '/map'
 
   # Control parameters
   k1: .5
@@ -62,7 +76,7 @@ pose_controller:
   v_max: 0.15
 
   # Tolerances
-  r_tolerance: 0.04
+  r_tolerance: 0.05
   
 ibvs_controller:
   # Proportional controller
@@ -71,20 +85,7 @@ ibvs_controller:
   e_tolerance: 30
 
 orientation_controller:
-  odom_topic: '/odom'
+  odom_topic: '/map'
   kp: 0.01
   ki: 0.001
   e_tolerance: 0.01
-
-map_localisation:
-  scan_topic: '/puzzlebot/scan'
-  map_path: '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
-  odom_topic: '/map'
-  lidar_resolution: 1147
-  lidar_offset: -90 # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
-  num_ransac_iterations: 70
-  ransac_d_threshold: 0.025
-  min_ransac_inliers: 30
-  search_range: 60
-  inertial_frame_name: 'map'
-  landmark_distance_threshold: 0.9

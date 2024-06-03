@@ -386,7 +386,7 @@ class Navigator:
         self._move_towards_goal()
 
     def go_to_point(self, point):
-        orientation = tft.quaternion_from_euler(0,0,navigator._yaw_to_point(point))
+        orientation = tft.quaternion_from_euler(0,0,self._yaw_to_point(point))
         pose = Pose(position=point, 
                     orientation=Quaternion(*orientation))
         self._set_goal(pose)

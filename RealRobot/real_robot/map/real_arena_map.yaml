@@ -1,5 +1,4 @@
 names: ['corner1', 'corner2', 'corner3', 'corner4']
-# names: ['corner1']
 
 corner1:
   x: 2.88

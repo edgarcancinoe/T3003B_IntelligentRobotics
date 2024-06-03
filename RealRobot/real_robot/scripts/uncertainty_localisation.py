@@ -184,11 +184,11 @@ if __name__ == '__main__':
                       wheel_radius=params['wheel_radius'],
                       track_length=params['track_length'], 
                       starting_state=params['starting_state'],
-                      odom_rate=rospy.get_param('~odom_rate'),
+                      odom_rate=rospy.get_param('/odometry_rate'),
                       k_l=rospy.get_param('~k_l'),
                       k_r=rospy.get_param('~k_r'),
-                      wl=rospy.get_param('~wl_topic'),
-                      wr=rospy.get_param('~wr_topic'))
+                      wl=rospy.get_param('/wl_topic'),
+                      wr=rospy.get_param('/wr_topic'))
 
     try:
         rospy.loginfo('Localisation node running')

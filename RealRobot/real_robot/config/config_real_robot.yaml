@@ -1,0 +1,156 @@
+#### REAL ROBOT CONFIGURATION FILE ###
+
+##### Constants #####
+#########################
+wheel_radius: 0.05
+track_length: 0.18
+starting_state:
+  'x': 0.0
+  'y': 0.0
+  'theta': 0.0
+camera_matrix: [[530.466941, 0, 205], 
+                  [0, 530.466941, 154], 
+                  [0, 0, 1]]
+                  
+distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
+
+focal_length_pixel: 530.466941
+target_id: 3
+target_aruco_size: 0.04
+target_z_desired: 0.126
+target_corner_locations: [[202.0, 461.0], 
+                            [193.0, 446.0], 
+                            [371.0, 242.0], 
+                            [369., 450.]]
+
+station_id: 1
+station_aruco_size: 0.04
+station_z_desired: 0.126
+station_corner_locations: [[202.0, 461.0], 
+                            [193.0, 446.0], 
+                            [371.0, 242.0], 
+                            [369., 450.]]
+#########################
+
+############### FILES #################
+#######################################
+map_path: '/home/puzzlebot/catkin_ws/src/T3003B_IntelligentRobotics/RealRobot/real_robot/config/config_real_robot.yaml'
+#######################################
+
+##### TF and frames #####
+#########################
+camera_frame: 'camera_link'
+object_frame: 'aruco_box'
+robot_frame: 'base_link'
+odom_frame: 'odom'
+map_frame: 'map'
+inertial_frame: 'map'
+#########################
+
+## Communication topics ##
+#########################
+orientation_controller_topic: '/orientation_goals'
+pose_controller_topic: '/goal_point'
+aruco_detection_topic: '/corners'
+commands_topic: '/cmd_vel'
+lidar_topic: '/scan'
+odometry_topic: '/map'
+wl_topic: '/wl'
+wr_topic: '/wr'
+camera_topic: '/feed/image_compressed'
+#########################
+
+####### Node rates ######
+control_rate: 50
+navigation_rate: 50
+rviz_publishing_rate: 50
+odometry_rate: 50
+#########################
+
+##### Node-specific configuration #####
+
+uncertainty_localisation:
+  k_l: 0.25
+  k_r: 0.25
+
+
+kalman_localisation:
+  k_l: 0.05
+  k_r: 0.05
+
+
+map_localisation:
+  lidar_resolution: 1147
+  lidar_offset: -90 # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
+  num_ransac_iterations: 75
+  ransac_d_threshold: 0.06
+  min_ransac_inliers: 60
+  search_range: 60
+  landmark_distance_threshold: 0.25
+
+pose_controller:
+  k1: 0.08
+  k2: 0.6
+  beta: 0.9
+  lambda_: 1.15
+  v_max: 0.2 # Will use min(/max_v, /pose_controller/v_max)
+  
+  r_tolerance: 0.1
+  
+ibvs:
+  kp: 0.4
+  e_tolerance: 12
+
+
+orientation_controller:
+  kp: 0.08
+  ki: 0.001
+  e_tolerance: 0.01
+
+bug_navigation:
+  # Frontal tolerance should be grater than horizontal tolerance
+  # and horizontal tolerance should be grater than the robot's side length
+  frontal_tolerance: 0.28
+  horizontal_tolerance: 0.25
+  
+  lidar_resolution: 1147 # 360, 720, 1080
+
+  v: 0.1
+  w: 0.1
+
+  bug2:
+    min_d_hitpoint: 0.04
+
+
+#######################################
+
+
+### Min-Max velocities ##
+
+max_v: 0.15 # Pose controller will use min(/max_v, /pose_controller/v_max)
+max_w: 0.2   
+
+# To ensure the physical wheels of the robot move, values in the range      
+#   min_w_to_move < w < min_w       
+# Will be assigned to w = min_w.
+
+# NOTE: this configuration will not make puzzlebot do perfect orientation changes, 
+# but we adapted it to work with the real puzzlebot as the
+# motors have different reactions to the same angular velocity.
+
+min_w_to_move: 0.0007 # The minimum angular velocity to consider that the controller is still trying to move the robot
+min_v_to_move: 0.0007 # The minimum angular velocity to consider that the controller is still trying to move the robot
+
+min_w: 0.075 # The minimum angular velocity to make sure both motors are moving
+min_v: 0.05
+
+
+# bug_activate_topic: '/bug_activate'
+# ibvs_activate_topic: '/ibvs_activate'
+# done_vision_topic: '/vision_done'
+# pose_control_activate_topic: '/pose_control_activate'
+# orientation_control_activate_topic: '/orientation_control_activate'
+
+# camera_topic: '/camera/image_raw'
+# unlock_topic: '/unlock'
+# finish_target_topic: '/finish_target'

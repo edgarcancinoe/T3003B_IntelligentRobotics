@@ -14,12 +14,9 @@ class Joint_State_Publisher():
         Listen to odometry topic and publish to rviz
     """
     def __init__(self, odom_frame, map_frame, robot_frame_name, r, l,
-                 joint_names, joint_initial_positions, joint_states_topic, 
                  starting_state, odom_topic, map_topic, rviz_rate):
         
-        # Save simulation joint parameters
-        self.joint_names = joint_names
-        self.joints_positions = np.array(joint_initial_positions)
+
         self.r = r
         self.l = l
         
@@ -44,9 +41,6 @@ class Joint_State_Publisher():
         # Suscsribe to Odom topic
         rospy.Subscriber(odom_topic, Odometry, self.odom_callback)
         rospy.Subscriber(map_topic, Odometry, self.map_callback)
-
-        # Joint State Publisher to send joint states to rviz simualtion
-        self.joint_state_publisher = rospy.Publisher(joint_states_topic, JointState, queue_size=10)
         
         self.listening_odom = False
         self.listening_map = False
@@ -126,9 +120,6 @@ if __name__ == '__main__':
     # Get Global ROS parameters
     params = get_global_params()
     # Get Local ROS parameters
-    joint_names = rospy.get_param('~joint_names', ['leftWheel', 'rightWheel'])
-    joint_initial_positions = rospy.get_param('~joint_initial_positions', [0.0, 0.0])
-    joint_states_topic = rospy.get_param('~joint_states', '/joint_states')
     robot_frame = rospy.get_param('/robot_frame')
     odom_frame = rospy.get_param('/odom_frame')
     map_frame = rospy.get_param('/map_frame')
@@ -138,9 +129,6 @@ if __name__ == '__main__':
                                                   map_frame = map_frame,
                                                   robot_frame_name=robot_frame,
                                                   r=params['wheel_radius'], l=params['track_length'],
-                                                  joint_names=joint_names, 
-                                                  joint_initial_positions=joint_initial_positions, 
-                                                  joint_states_topic=joint_states_topic,
                                                   starting_state = params['starting_state'],
                                                   odom_topic = params['odometry_topic'],
                                                   map_topic = map_topic,

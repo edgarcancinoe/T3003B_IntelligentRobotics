@@ -243,7 +243,7 @@ class Locater():
             G_k = self._jacobianG(dx, dy, z_hat_k) # (8x3)
             # Zk: Uncertainty propagation
             # (8x3)(3x3) (3x8) = (3,8)
-            Z_k = G_k @ sigma_hat @ G_k.T + np.eye(2*len(landmarks_on_sight)) * 4.5 
+            Z_k = G_k @ sigma_hat @ G_k.T + np.eye(2*len(landmarks_on_sight)) * 12.5 
             # K_k: Kalman Gain
             K_k = sigma_hat @ G_k.T @ np.linalg.pinv(Z_k) # (3,8)
             
@@ -281,7 +281,7 @@ if __name__ == '__main__':
 
     # Get Global ROS parameters
     params = get_global_params()
-    map_path = '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
+    map_path = rospy.get_param('/map_path')
 
     locater = Locater(odometry_topic=rospy.get_param('/odometry_topic'), 
                       map_topic = rospy.get_param('/map_topic'),

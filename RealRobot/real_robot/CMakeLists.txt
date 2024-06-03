@@ -16,7 +16,7 @@ find_package(catkin REQUIRED)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -158,12 +158,13 @@ include_directories(
 catkin_install_python(PROGRAMS
    scripts/bug_navigator.py
    scripts/ibvs.py
-   scripts/joint_state_pub.py
+   scripts/robot_state_pub.py
+   scripts/kalman_localisation.py
    scripts/navigation.py
    scripts/orientation_controller.py
    scripts/pose_controller.py
-   scripts/vision.py
    scripts/uncertainty_localisation.py
+   scripts/vision.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
