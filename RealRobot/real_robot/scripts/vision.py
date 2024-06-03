@@ -18,7 +18,7 @@ class ArucoDetector:
                  target_id, target_detection_topic, 
                  stream_video=True, verbose=True, 
                  target_samples_required: int = 100):
-        
+        print("Inicio de Vision")
         self.image_sub = rospy.Subscriber(camera_topic, CompressedImage, self._image_callback)
         self.reset_sub = rospy.Subscriber('/reset_vision', Bool, self._reset)
         self.corner_pub = rospy.Publisher(target_detection_topic, Polygon, queue_size=10)

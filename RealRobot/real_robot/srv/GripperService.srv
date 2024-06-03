@@ -1,0 +1,4 @@
+# Gripper.srv
+bool data
+---
+float32 angle

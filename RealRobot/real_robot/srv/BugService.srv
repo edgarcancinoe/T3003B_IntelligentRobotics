@@ -1,0 +1,5 @@
+# BugService.srv
+geometry_msgs/Point point
+int32 bug 
+---
+bool finish

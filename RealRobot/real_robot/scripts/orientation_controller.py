@@ -94,7 +94,7 @@ class Puzzlebot_orientation_controller():
         dt = self._get_dt()
         if not self.active or not self.goal_set() or self.reached_goal or self.starting_yaw == None:
             return
-
+        print("Calcular Target")
         target = self.target_yaw
 
         yaw = (self.yaw + 2*np.pi) % (2*np.pi) # Ensure range [0, 2*pi]
