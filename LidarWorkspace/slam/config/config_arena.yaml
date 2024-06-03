@@ -75,3 +75,17 @@ orientation_controller:
   kp: 0.01
   ki: 0.001
   e_tolerance: 0.01
+
+map_localisation:
+  scan_topic: '/puzzlebot/scan'
+  map_path: '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
+  odom_topic: '/map'
+  lidar_resolution: 1147
+  lidar_offset: 90 # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
+  num_ransac_iterations: 70
+  ransac_d_threshold: 0.025
+  min_ransac_inliers: 30
+  search_range: 60
+  inertial_frame_name: 'map'
+  landmark_distance_threshold: 0.9
+  

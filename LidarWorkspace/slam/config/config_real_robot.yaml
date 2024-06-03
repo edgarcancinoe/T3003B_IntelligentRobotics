@@ -2,7 +2,9 @@
 camera_frame: 'camera_link'
 object_frame: 'aruco_box'
 robot_frame: 'base_link'
-inertial_frame: 'odom'
+odom_frame: 'odom'
+map_frame: 'map'
+
 target_id: 8
 aruco_size: 0.048
 desired_corner_locations: [[381., 435.], 
@@ -33,15 +35,21 @@ navigator_rate: 50
 commands_topic: '/cmd_vel'
 odometry_topic: '/odom'
 sim_odom_topic: '/odom'
+map_topic: '/map'
 
 uncertainty_localisation:
   wl_topic: 'wl'
   wr_topic: 'wr'
-  odometry_topic: '/odom'
-  
+  k_l: 0.012
+  k_r: 0.012
+  odom_rate: 60
+
 kalman_localisation:
   wl_topic: 'wl'
   wr_topic: 'wr'
+  k_l: 0.3
+  k_r: 0.3
+  odom_rate: 60
 
 pose_controller:
   odom_topic: '/odom'
@@ -67,3 +75,16 @@ orientation_controller:
   kp: 0.01
   ki: 0.001
   e_tolerance: 0.01
+
+map_localisation:
+  scan_topic: '/puzzlebot/scan'
+  map_path: '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
+  odom_topic: '/map'
+  lidar_resolution: 1147
+  lidar_offset: -90 # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
+  num_ransac_iterations: 70
+  ransac_d_threshold: 0.025
+  min_ransac_inliers: 30
+  search_range: 60
+  inertial_frame_name: 'map'
+  landmark_distance_threshold: 0.9

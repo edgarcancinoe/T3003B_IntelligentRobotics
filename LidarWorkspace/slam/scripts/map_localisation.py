@@ -337,17 +337,18 @@ if __name__ == '__main__':
 
     # Set parameters and create map localisation object
 
-    scan_topic = '/puzzlebot/scan'
-    map_path = '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
-    odom_topic = '/map'
-    lidar_resolution = 1147
-    lidar_offset = np.radians(90) # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
-    num_ransac_iterations = 70
-    ransac_d_threshold = 0.025
-    min_ransac_inliers = 30
-    search_range = np.radians(60)
-    inertial_frame_name = 'map'
-    landmark_distance_threshold = .9
+    scan_topic = rospy.get_param('~scan_topic')
+    map_path = rospy.get_param('~map_path')
+    odom_topic = rospy.get_param('~odom_topic')
+    lidar_resolution = rospy.get_param('~lidar_resolution')
+    lidar_offset = np.radians(rospy.get_param('~lidar_offset')) # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
+    num_ransac_iterations = rospy.get_param('~num_ransac_iterations')
+    ransac_d_threshold = rospy.get_param('~ransac_d_threshold')
+    min_ransac_inliers = rospy.get_param('~min_ransac_inliers')
+    search_range = np.radians(rospy.get_param('~search_range'))
+    inertial_frame_name = rospy.get_param('~inertial_frame_name')
+    landmark_distance_threshold = rospy.get_param('~landmark_distance_threshold')
+
     map_localisator = MapLocalisation(scan_topic, map_path, odom_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold,
                                       search_range, num_ransac_iterations, ransac_d_threshold, min_ransac_inliers)
 
