@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
-        "./Week2Challenge/week2challenge/src"
+        "./Week2Challenge/week2challenge/src",
+        "./RealRobot/real_robot/src"
     ],
     "cmake.configureOnOpen": false
 }

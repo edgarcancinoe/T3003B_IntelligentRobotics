@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 from std_msgs.msg import Bool
-from geometry_msgs.msg import Vector3, Twist, Polygon, TransformStamped
+from geometry_msgs.msg import Vector3, Twist, Polygon
 import tf2_ros
 import tf.transformations as tft
 import math
@@ -50,7 +50,7 @@ class Puzzlebot_Visual_Controller():
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         
-        rospy.sleep(15.0)  # Wait for tf2 to initialize
+        rospy.sleep(5.0)  # Wait for tf2 to initialize
 
         found = False
         while not found:
@@ -132,6 +132,7 @@ class Puzzlebot_Visual_Controller():
     def vision_callback(self, msg):
         if len(msg.points) == 0:
             self.p = None
+            self.target_on_sight = False
             return
         # Format [u1 v1, u2 v2, u3 v3, u4 v4]
         self.p = np.array([[point.x, point.y] for point in msg.points]).flatten()
@@ -144,8 +145,8 @@ class Puzzlebot_Visual_Controller():
                 
         # Proportional error
         done = False
-        if self.p is not None:
-            #print("Firt if")
+        if self.target_on_sight:
+            
             e = self._compute_errors()
             if np.linalg.norm(e) <= self.error_tolerance:
                 rospy.logwarn('IBVS Goal reached')
@@ -161,8 +162,8 @@ class Puzzlebot_Visual_Controller():
                 xi_dot_c = np.array([0.0, 0.0, s_dot[0], 0.0, s_dot[1], 0.0])
                 xi_dot_r = self.V_r_c_inv @ xi_dot_c
                 
-                # Sanity check on the angular velocity
-                #Angular velocities
+                # Sanity check on the linear and angular velocities
+                # Angular velocities
                 if abs(xi_dot_r[5]) < self.min_w_to_move:
                     xi_dot_r[5] = 0.0
                 elif abs(xi_dot_r[5]) < self.min_w:
@@ -170,7 +171,7 @@ class Puzzlebot_Visual_Controller():
                 else:
                     xi_dot_r[5] = np.clip(xi_dot_r[5], -self.max_w, self.max_w)
 
-                #Linear Velocities
+                # Linear Velocities
                 if abs(xi_dot_r[0]) < self.min_v_to_move:
                     xi_dot_r[0] = 0.0
                 elif abs(xi_dot_r[0]) < self.min_v:
@@ -184,19 +185,20 @@ class Puzzlebot_Visual_Controller():
 
                 twist_msg.linear.x = xi_dot_r[0]
                 twist_msg.angular.z = xi_dot_r[5] * 0.4
-        # else:
-        #     done = True
+
             if done:
                 twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
                                 angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
                 self.cmd_vel_publisher.publish(twist_msg)
                 self.reached_goal_publisher.publish(done)
+                self.active = False
                 rospy.logwarn('DONE')
             elif not done:
                 self.cmd_vel_publisher.publish(twist_msg)
-
-        # Reset state
-        # self.p = None
+        else: # No target on sight
+            rospy.logwarn('Cannot see the target')
+            self.reached_goal_publisher.publish(False)
+            self.active = False
 
 
 if __name__=='__main__':

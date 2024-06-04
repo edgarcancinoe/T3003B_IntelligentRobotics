@@ -10,6 +10,7 @@ import tf.transformations as tft
 from real_robot_util.util import get_global_params
 #Service
 from real_robot.srv import GripperService, BugService
+from real_robot.srv import OrientationService
 
 
 class Navigator:
@@ -25,7 +26,7 @@ class Navigator:
                         #orientation_controller_topic,
                         cmd_vel_topic: str,
                         odom_topic: str,
-                        unlock_topic: str):
+                        ibvs_result_topic: str):
         
         # Frames
         self.inertial_frame_id = inertial_frame_id
@@ -61,41 +62,29 @@ class Navigator:
 
         # Initialize the subscribers
         rospy.Subscriber(target_detection_topic, Polygon, self._target_detection_callback)
-        rospy.Subscriber(unlock_topic, Bool, self._unlock_callback)
+        rospy.Subscriber(ibvs_result_topic, Bool, self._ibvs_result_callback)
         rospy.Subscriber(odom_topic, Odometry, self._odom_callback)
         # Set timer
         rospy.Timer(rospy.Duration(1.0/navigator_rate), self.run)
 
     def _target_detection_callback(self, _):
-        if self.state == 'NO_TARGET_DETECTED':
+        if self.state == 'NO_TARGET_DETECTED' or self.state == 'TARGET LOST':
             self.state = 'TARGET_DETECTED'
             self.busy = False
-        if self.state == 'ALIGNED TO TARGET':
-            self.target_found = True
-        if self.state == 'SEARCHING':
             self.target_found = True
 
 
-    def _unlock_callback(self, _):
+    def _ibvs_result_callback(self, msg):
         if self.state == 'TARGET_DETECTED':
-            self.state = 'ALIGNED TO TARGET'
-
-            self.ibvs_commander.publish(Bool(False))
-            #Close Gripper
-            self.call_gripper_service(False)
-            print("Llamar a Go to Point")
-            rospy.sleep(5)
-            #Letter B (2.88,-1.62)
-            point = Point(2.50, -1.62, 0.0)
-            self.call_bug_service(point,2)
-            # self.bug_commander.publish(Bool(True))
-            
-        elif self.state == 'ALIGNED TO TARGET':
-            self.state = 'TARGET_REACHED'
-        elif self.state == 'SEARCHING':
-            self.search_exhausted = True
-            rospy.loginfo('Orientation search exhausted')
-        self.busy = False
+            if msg.data:
+                self.state = 'TARGET_REACHED'
+                self.ibvs_commander.publish(Bool(False))
+                self.busy = False
+            else:
+                self.state = 'TARGET LOST'
+                self.ibvs_commander.publish(Bool(False))
+                self.target_found = False
+                self.busy = False
 
     def _odom_callback(self, msg):
         self.s = msg.pose.pose
@@ -138,26 +127,31 @@ class Navigator:
     def _search_for_target(self):
         # Spin and search for the target
         self.target_found = False
-        self.state = "SEARCHING"
 
-        #self.orientation_controller_activate_publisher.publish(Bool(True))
-        current_yaw = self._quat2yaw(self.s.orientation) # [-pi pi] ??
-
-        current_yaw = (current_yaw + 2*np.pi) % (2*np.pi) # Ensure range [0, 2*pi]
-
-        search_radius = 2*np.pi * 0.99
+        current_yaw = (self._quat2yaw(self.s.orientation) + 2*np.pi) % (2*np.pi) # Ensure range [0, 2*pi]
 
         # Search to left side
-        self.search_exhausted = False
-        target_orientation = (current_yaw + search_radius) % (2*np.pi)
-        #self.orientation_controller_publisher.publish(Float32(target_orientation)) # In range [0, 2*pi]
-        
-        # Wait to controller to finish or target be detected
+        target_orientations = [(current_yaw + np.radians(30)) % (2*np.pi), (current_yaw - np.radians(30)) % (2*np.pi)]
+        idx = 0
         rospy.logwarn('Searching for visual target...')
         while not self.target_found and not self.search_exhausted:
             rospy.sleep(0.05)
+        
+            try:
+                orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
+                response = orientation_controller(target_orientations[idx])
+                rospy.loginfo(f"Orientation Controler Finish {response.finish}")
+                self.target_found = response.finish
+            except rospy.ServiceException as e:
+                rospy.logerr(f"Service call failed: {e}")
+                return False
+            if not response.finish:
+                raise Exception('Orientation controller failed')
+            else:
+                rospy.loginfo('Orientation controller finished')
 
-        #self.orientation_controller_activate_publisher.publish(Bool(False))
+            idx = (idx + 1) % 2
+
         return self.target_found
     
     
@@ -167,21 +161,36 @@ class Navigator:
             return
 
         if self.state == 'NO_TARGET_DETECTED':
-            print("IR AL ARUCO")
             # Navigation: Searching for the target 
             self.busy = True
+            self.call_gripper_service(True)
+            rospy.logwarn('Robot initialized. Waiting for target detection.')
 
         elif self.state == 'TARGET_DETECTED':
             # Compute the desired point and send the command to pose controller
-            print("IR AL ARUCO")
+            rospy.logwarn("Target found. Activating IBVS controller.")
             self.busy = True
-            self.call_gripper_service(True)
             self.ibvs_commander.publish(Bool(True))
 
-        elif self.state == 'ALIGNED TO TARGET':
-            #print("llegue")
-            # Compute the desired point and send the command to pose controller
-            self.busy = False
+        elif self.state == 'TARGET_REACHED':
+            rospy.logwarn('Target reached. Closing gripper.')
+            self.busy = True
+            self.ibvs_commander.publish(Bool(False))
+
+            # Close Gripper
+            self.call_gripper_service(False)
+            rospy.sleep(2)
+            point = Point(2.50, -1.62, 0.0)
+            rospy.logwarn(f'Gripper closed. Going to point {point}...')
+            rospy.sleep(2)
+            #Letter B (2.88,-1.62)
+            self.call_bug_service(point,2)
+            # self.bug_commander.publish(Bool(True))
+
+        elif self.state == 'TARGET LOST':
+            rospy.logwarn('Target lost. Searching for target...')
+            self.target_found = self._search_for_target()
+            self.busy = True
 
 
             # Compute the desired point and orientation in the inertial frame
@@ -243,7 +252,7 @@ if __name__ == '__main__':
     target_detection_topic = params['aruco_detection_topic']
     ibvs_activate_topic = params['ibvs_activate_topic']
     bug_activate_topic = params['bug_activate_topic']
-    unlock_topic = params['ibvs_done_topic']
+    ibvs_result_topic = params['ibvs_done_topic']
     cmd_vel_topic = params['commands_topic']
     odometry_topic = params['odometry_topic']
 
@@ -265,6 +274,6 @@ if __name__ == '__main__':
                             #orientation_controller_topic,
                             cmd_vel_topic,
                             odometry_topic,
-                            unlock_topic)
+                            ibvs_result_topic)
     # Spin the node
     rospy.spin()
