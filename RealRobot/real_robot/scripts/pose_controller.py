@@ -5,7 +5,7 @@ import numpy as np
 from std_msgs.msg import Bool, Float32
 from geometry_msgs.msg import Vector3, Twist, Point, Pose, Quaternion
 from nav_msgs.msg import Odometry
-from puzzlebot_util.util import *
+from real_robot_util.util import get_pose_controller_params
 import math
 import tf.transformations as tf
 
@@ -151,19 +151,19 @@ class Puzzlebot_controller():
 
 if __name__=='__main__':
     # Initialise and Setup node
-    rospy.init_node("smooth_controller")
+    rospy.init_node("orientation_controller")
 
     # Get Global ROS parameters
-    params = get_global_params()
+    params = get_pose_controller_params()
     
     # Get Local ROS parameters
-    k1 = rospy.get_param('~k1', 0.0)
-    k2 = rospy.get_param('~k2', 0.0)
-    beta = rospy.get_param('~beta', 0.0)
-    lambda_ = rospy.get_param('~lambda', 0.0)
-    v_max = min(rospy.get_param('~v_max'), rospy.get_param('/max_v'))
-    r_tolerance = rospy.get_param('~r_tolerance', 0.0)
-    odom_topic = rospy.get_param('~odom_topic', '/puzzlebot/gazebo_odom')
+    k1 = params['k1']
+    k2 = params['k2']
+    beta = params['beta']
+    lambda_ = params['lambda']
+    v_max = params['v_max']
+    r_tolerance = params['r_tolerance']
+    odom_topic = params['odometry_topic']
 
     # Controller instance
     starting_pose = Point(x = params['starting_state']['x'], 
@@ -179,8 +179,8 @@ if __name__=='__main__':
                                                 commands_topic = params['commands_topic'],
                                                 odom_topic = odom_topic,
                                                 goals_topic = params['pose_controller_topic'],
-                                                send_done_topic = params['unlock_topic'],
-                                                pose_control_activate_topic = rospy.get_param('/pose_control_activate_topic'),
+                                                send_done_topic = params['unlock'],
+                                                pose_control_activate_topic = params['pose_control_activate_topic'],
                                                 control_rate = params['control_rate'])
     
     try:

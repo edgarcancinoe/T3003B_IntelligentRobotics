@@ -23,11 +23,11 @@
         <node pkg="real_robot" type="map_localisation.py" name="map_localisation" output="screen"/>
         <node pkg="real_robot" type="gripper_server.py" name="gripper_server" output="screen"/>
         <node pkg="real_robot" type="orientation_controller_server.py" name="orientation_controller_server" output="screen"/>
-        <node pkg="real_robot" type="pose_controller_server.py" name="pose_controller_server" output="screen"/>
+        <node pkg="real_robot" type="pose_controller.py" name="pose_controller" output="screen"/>
         <node pkg="real_robot" type="bug_server.py" name="bug_server" output="screen"/>
+        <node pkg="real_robot" type="ibvs.py" name="ibvs_controller" output="screen"/>
         <node pkg="real_robot" type="navigation.py" name="navigation" output="screen" />
         <node pkg="real_robot" type="vision.py" name="vision" output="screen" />
-        <node pkg="real_robot" type="ibvs.py" name="ibvs_controller" output="screen"/>
 
 
 

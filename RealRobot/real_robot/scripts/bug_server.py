@@ -6,7 +6,7 @@ from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from real_robot.srv import BugService, BugServiceResponse
-from real_robot.srv import OrientationService, PoseService
+from real_robot.srv import OrientationService
 import numpy as np
 import tf.transformations as tft
 from real_robot_util.util import get_bug_navigation_params
@@ -14,7 +14,7 @@ from real_robot_util.util import get_bug_navigation_params
 class Navigator:
     def __init__(self, 
                  odom_topic, lidar_topic,
-                 #pose_controller_activate_topic, pose_controller_topic,
+                 pose_controller_activate_topic, pose_controller_topic,
                  #orientation_controller_activate_topic, orientation_controller_topic,
                  cmd_vel_topic, unlock_topic,
                  horizontal_tolerance, frontal_tolerance,
@@ -66,8 +66,8 @@ class Navigator:
         # Publishers ------------ 
 
         # Pose controller activation and message
-        #self.pose_controller_activate_pub = rospy.Publisher(pose_controller_activate_topic, Bool, queue_size=10)
-        #self.pose_controller_pub = rospy.Publisher(pose_controller_topic, Pose, queue_size=10)
+        self.pose_controller_activate_pub = rospy.Publisher(pose_controller_activate_topic, Bool, queue_size=10)
+        self.pose_controller_pub = rospy.Publisher(pose_controller_topic, Pose, queue_size=10)
         # Orientation controller activation and message
         #self.orientation_controller_activate_pub = rospy.Publisher(orientation_controller_activate_topic, Bool, queue_size=10)
         #self.orientation_controller_pub = rospy.Publisher(orientation_controller_topic, Float32, queue_size=10)
@@ -192,11 +192,11 @@ class Navigator:
 
         self.unlocked = msg.data
 
-    #def _activate_pose_controller(self):
-    #    self.pose_controller_activate_pub.publish(Bool(True))
+    def _activate_pose_controller(self):
+        self.pose_controller_activate_pub.publish(Bool(True))
 
-    #def _deactivate_pose_controller(self):
-    #    self.pose_controller_activate_pub.publish(Bool(False))
+    def _deactivate_pose_controller(self):
+        self.pose_controller_activate_pub.publish(Bool(False))
     
     #def _activate_orientation_controller(self):
         #self.orientation_controller_activate_pub.publish(Bool(True))
@@ -204,10 +204,10 @@ class Navigator:
     #def _deactivate_orientation_controller(self):
         #self.orientation_controller_activate_pub.publish(Bool(False))
     
-    #def _set_goal_pose(self, goal_pose):
-    #    self._activate_pose_controller()
-    #    self.unlocked = False
-    #    self.pose_controller_pub.publish(goal_pose)
+    def _set_goal_pose(self, goal_pose):
+        self._activate_pose_controller()
+        self.unlocked = False
+        self.pose_controller_pub.publish(goal_pose)
     
     def _set_goal_orientation(self, goal_orientation):
         """
@@ -356,9 +356,9 @@ class Navigator:
             # Move towards goal and set the state to MovingTowardsGoal
         
             self.state = 'MovingTowardsGoal'
-            self._callback_pose_service(self.final_goal)
-            #self._activate_pose_controller()
-            #self._set_goal_pose(self.final_goal)
+            #self._callback_pose_service(self.final_goal)
+            self._activate_pose_controller()
+            self._set_goal_pose(self.final_goal)
 
             reached_goal = False
             
@@ -397,9 +397,9 @@ class Navigator:
                         rospy.sleep(1)
                         self._orientate_towards_goal()
                         self.state = 'MovingTowardsGoal'
-                        self._callback_pose_service(self.final_goal)
-                        #self._activate_pose_controller()
-                        #self._set_goal_pose(self.final_goal)
+                        #self._callback_pose_service(self.final_goal)
+                        self._activate_pose_controller()
+                        self._set_goal_pose(self.final_goal)
                         continue
         else:
             raise ValueError('No goal set')
@@ -434,16 +434,16 @@ class Navigator:
             rospy.logerr(f"Service call failed: {e}")
             return None      
 
-    def _callback_pose_service(self, goal):
-        rospy.wait_for_service('orientation_controller')  
-        try:
-            pose_controller = rospy.ServiceProxy('pose_controller', PoseService)
-            response = pose_controller(goal)
-            rospy.loginfo(f"Pose Controler Finish {response.finish}")
-            return response.finish
-        except rospy.ServiceException as e:
-            rospy.logger(f"Service call failed: {e}")
-            return None
+    #def _callback_pose_service(self, goal):
+    #    rospy.wait_for_service('orientation_controller')  
+    #    try:
+    #        pose_controller = rospy.ServiceProxy('pose_controller', PoseService)
+    #        response = pose_controller(goal)
+    #        rospy.loginfo(f"Pose Controler Finish {response.finish}")
+    #        return response.finish
+    #    except rospy.ServiceException as e:
+    #        rospy.logger(f"Service call failed: {e}")
+    #        return None
     
 class Bug2Nav(Navigator):
     def __init__(self, *args, min_d_hitpoint=0.04):
@@ -521,9 +521,9 @@ def handle_bug(req):
     params = get_bug_navigation_params()
     odometry_topic = params['odometry_topic']
     lidar_topic = params['lidar_topic']
+    pose_controller_topic = params['pose_controller_topic']
     #pose_controller_topic = params['pose_controller_topic']
-    #pose_controller_topic = rospy.get_param('/pose_controller_topic')
-    #pose_controller_activate_topic = rospy.get_param('/pose_control_activate_topic')
+    pose_controller_activate_topic = params['pose_control_activate_topic']
     #orientation_controller_topic = rospy.get_param('/orientation_controller_topic')
     #orientation_controller_activate_topic = rospy.get_param('/orientation_control_activate_topic')
     unlock_topic = params['unlock']
@@ -538,7 +538,7 @@ def handle_bug(req):
 
     if req.bug == 0:
         navigator = Bug0Nav(odometry_topic, lidar_topic, 
-                        #pose_controller_activate_topic, pose_controller_topic,
+                        pose_controller_activate_topic, pose_controller_topic,
                         #orientation_controller_activate_topic, orientation_controller_topic, 
                         cmd_vel_topic, unlock_topic,
                         horizontal_tolerance, frontal_tolerance,
@@ -547,7 +547,7 @@ def handle_bug(req):
         return  BugServiceResponse(True)
     elif req.bug == 2:
         navigator = Bug2Nav(odometry_topic, lidar_topic, 
-                        #pose_controller_activate_topic, pose_controller_topic,
+                        pose_controller_activate_topic, pose_controller_topic,
                         #orientation_controller_activate_topic, orientation_controller_topic, 
                         cmd_vel_topic, unlock_topic,
                         horizontal_tolerance, frontal_tolerance,

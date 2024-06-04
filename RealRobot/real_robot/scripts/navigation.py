@@ -70,11 +70,11 @@ class Navigator:
     def _target_detection_callback(self, corners):
         if len(corners.points) == 0:
             return
-        if self.state == 'NO_TARGET_DETECTED' or self.state == 'TARGET LOST':
-            print(corners)
+        if self.state == 'NO_TARGET_DETECTED' or self.state == 'TARGET_LOST':
             self.state = 'TARGET_DETECTED'
             self.busy = False
             self.target_found = True
+            
 
 
     def _ibvs_result_callback(self, msg):
@@ -84,7 +84,7 @@ class Navigator:
                 self.ibvs_commander.publish(Bool(False))
                 self.busy = False
             else:
-                self.state = 'TARGET LOST'
+                self.state = 'TARGET_LOST'
                 self.ibvs_commander.publish(Bool(False))
                 self.target_found = False
                 self.busy = False
@@ -122,6 +122,20 @@ class Navigator:
             rospy.logerr(f"Service call failed: {e}")
             return None
 
+    def call_orientation_service(self, goal):
+        rospy.wait_for_service('orientation_controller')
+        try:
+            orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
+            response = orientation_controller(Float32(goal))
+            rospy.loginfo(f"Orientation Controler Finish {response.finish}")
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Service call failed: {e}")
+            return False
+        if not response.finish:
+            raise Exception('Orientation controller failed')
+        else:
+            rospy.loginfo('Orientation controller finished')
+
     def _quat2yaw(self, quat):
         euler = tft.euler_from_quaternion((quat.x, quat.y, quat.z, quat.w))
         yaw = euler[2]
@@ -134,26 +148,15 @@ class Navigator:
         current_yaw = (self._quat2yaw(self.s.orientation) + 2*np.pi) % (2*np.pi) # Ensure range [0, 2*pi]
 
         # Search to left side
-        target_orientations = [(current_yaw + np.radians(30)) % (2*np.pi), (current_yaw - np.radians(30)) % (2*np.pi)]
+        target_orientations = [(current_yaw + np.radians(8)) % (2*np.pi), (current_yaw - np.radians(8)) % (2*np.pi)]
         idx = 0
         rospy.logwarn('Searching for visual target...')
-        while not self.target_found and not self.search_exhausted:
+        while not self.target_found:
             rospy.sleep(0.05)
         
-            try:
-                orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
-                response = orientation_controller(Float32(target_orientations[idx]))
-                rospy.loginfo(f"Orientation Controler Finish {response.finish}")
-            except rospy.ServiceException as e:
-                rospy.logerr(f"Service call failed: {e}")
-                return False
-            if not response.finish:
-                raise Exception('Orientation controller failed')
-            else:
-                rospy.loginfo('Orientation controller finished')
+            self.call_orientation_service(target_orientations[idx])
 
             idx = (idx + 1) % 2
-            rospy.sleep(1)
 
         return self.target_found
     
@@ -179,21 +182,30 @@ class Navigator:
             rospy.logwarn('Target reached. Closing gripper.')
             self.busy = True
             self.ibvs_commander.publish(Bool(False))
-
+            # Move for 4 seconds
+            vel = Twist(linear=Vector3(0.1, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+            self.cmd_vel_publisher.publish(vel)
+            rospy.sleep(1)
+            vel = Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+            self.cmd_vel_publisher.publish(vel)
+            rospy.sleep(1)
             # Close Gripper
             self.call_gripper_service(False)
             rospy.sleep(2)
-            point = Point(2.50, -1.62, 0.0)
+            point = Point(2.40, 1.4, 0.0)
             rospy.logwarn(f'Gripper closed. Going to point {point}...')
             rospy.sleep(2)
-            #Letter B (2.88,-1.62)
+            # Letter B (2.88,1.62)
             self.call_bug_service(point,2)
+            self.call_orientation_service(0)
             # self.bug_commander.publish(Bool(True))
 
-        elif self.state == 'TARGET LOST':
+        elif self.state == 'TARGET_LOST':
             rospy.logwarn('Target lost. Searching for target...')
-            self.target_found = self._search_for_target()
-            self.busy = True
+            self._search_for_target()
+            rospy.logwarn('Target has ben found again. ' + str(self.target_found))
+            # self.state = "TARGET_DETECTED"
+            self.busy = False
 
 
             # Compute the desired point and orientation in the inertial frame

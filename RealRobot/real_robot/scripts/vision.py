@@ -58,6 +58,22 @@ class ArucoDetector:
         self.target_samples_required = target_samples_required
         rospy.sleep(2)
 
+
+        buffer = tf2_ros.Buffer()
+        timeout = rospy.Duration(20.0)
+        tf_listener = tf2_ros.TransformListener(buffer)
+
+        while not rospy.is_shutdown():
+            try:
+                transform = buffer.lookup_transform(inertial_frame_id, camera_frame_id, rospy.Time(0), timeout)
+                break
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                if rospy.Time.now() - start_time > timeout:
+                    rospy.logwarn("Timeout while waiting for transform from {} to {}".format(source_frame, target_frame))
+                    return None
+                rospy.sleep(0.05)
+
+
         # Initialize video capture
         gst_str = "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=640, height=480, format=NV12, framerate=30/1 ! nvvidconv flip-method=2 ! video/x-raw, width=640, height=480, format=BGRx ! videoconvert ! video/x-raw, format=BGR ! appsink"
         self.cap = cv2.VideoCapture(gst_str, cv2.CAP_GSTREAMER)
@@ -66,7 +82,7 @@ class ArucoDetector:
             rospy.logerr("Failed to open video capture")
             raise RuntimeError("Failed to open video capture")
         rospy.Timer(rospy.Duration(3), self._verbose)
-        self.camaraTimer = rospy.Timer(rospy.Duration(1/30), self._image_processing)
+        self.camaraTimer = rospy.Timer(rospy.Duration(1/40), self._image_processing)
        
     #def _ibvs_callback(self, msg):
     #    if  msg.data:

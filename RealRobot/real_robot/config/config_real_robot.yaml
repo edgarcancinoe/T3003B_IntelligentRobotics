@@ -100,8 +100,8 @@ pose_controller:
   r_tolerance: 0.1
   
 ibvs:
-  kp: 0.1
-  e_tolerance: 20
+  kp: 0.035
+  e_tolerance: 290
 
 orientation_controller:
   kp: 0.08
@@ -129,7 +129,7 @@ bug_navigation:
 ### Min-Max velocities ##
 
 max_v: 0.15 # Pose controller will use min(/max_v, /pose_controller/v_max)
-max_w: 0.2   
+max_w: 0.18
 
 # To ensure the physical wheels of the robot move, values in the range      
 #   min_w_to_move < w < min_w       
@@ -139,8 +139,8 @@ max_w: 0.2
 # but we adapted it to work with the real puzzlebot as the
 # motors have different reactions to the same angular velocity.
 
-min_w_to_move: 0.0007 # The minimum angular velocity to consider that the controller is still trying to move the robot
-min_v_to_move: 0.0007 # The minimum angular velocity to consider that the controller is still trying to move the robot
+min_w_to_move: 0.00025 # The minimum angular velocity to consider that the controller is still trying to move the robot
+min_v_to_move: 0.00025 # The minimum angular velocity to consider that the controller is still trying to move the robot
 
 min_w: 0.075 # The minimum angular velocity to make sure both motors are moving
 min_v: 0.05
@@ -149,7 +149,7 @@ min_v: 0.05
 # bug_activate_topic: '/bug_activate'
 # ibvs_activate_topic: '/ibvs_activate'
 # done_vision_topic: '/vision_done'
-# pose_control_activate_topic: '/pose_control_activate'
+pose_control_activate_topic: '/pose_control_activate'
 # orientation_control_activate_topic: '/orientation_control_activate'
 
 # camera_topic: '/camera/image_raw'

@@ -50,7 +50,7 @@ class Puzzlebot_Visual_Controller():
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         
-        rospy.sleep(5.0)  # Wait for tf2 to initialize
+        rospy.sleep(7.0)  # Wait for tf2 to initialize
 
         found = False
         while not found:
@@ -142,12 +142,13 @@ class Puzzlebot_Visual_Controller():
     def compute_output(self, _):
         if not self.active:
             return
-                
+        # print('TARGET ON SIGHT IBVS') if self.target_on_sight else print('NO TARGET ON SIGHT IBVS')
         # Proportional error
         done = False
         if self.target_on_sight:
             
             e = self._compute_errors()
+            print(np.linalg.norm(e))
             if np.linalg.norm(e) <= self.error_tolerance:
                 rospy.logwarn('IBVS Goal reached')
                 done = True

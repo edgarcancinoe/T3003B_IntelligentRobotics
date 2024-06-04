@@ -10,6 +10,7 @@ def get_global_params():
         'inertial_frame': rospy.get_param('/inertial_frame'),
         'orientation_controller_topic': rospy.get_param('/orientation_controller_topic'),
         'pose_controller_topic': rospy.get_param('/pose_controller_topic'),
+        'pose_control_activate_topic': rospy.get_param('/pose_control_activate_topic'),
         'aruco_detection_topic': rospy.get_param('/aruco_detection_topic'),
         'commands_topic': rospy.get_param('/commands_topic'),
         'lidar_topic': rospy.get_param('/lidar_topic'),
