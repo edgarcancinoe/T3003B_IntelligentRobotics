@@ -83,12 +83,6 @@ class ArucoDetector:
             raise RuntimeError("Failed to open video capture")
         rospy.Timer(rospy.Duration(3), self._verbose)
         self.camaraTimer = rospy.Timer(rospy.Duration(1/40), self._image_processing)
-       
-    #def _ibvs_callback(self, msg):
-    #    if  msg.data:
-    #        self.camaraTimer.shutdown
-    #        self.done_vision_pub.publish(True)
-
 
     def _reset(self, _):
         self.knowledge = {}
@@ -110,12 +104,8 @@ class ArucoDetector:
             self.cap.open()
 
         ret, cv = self.cap.read()
-        result, jpeg_image = cv2.imencode('.jpg', cv)
-        compressed_image_msg = CompressedImage()
-        compressed_image_msg.header.stamp = rospy.Time.now()
-        compressed_image_msg.format = "jpeg"
-        compressed_image_msg.data = jpeg_image.tobytes()
-        self.send_image.publish(compressed_image_msg)
+        
+        
         if not ret:
             rospy.logerr("Failed to capture image")
             return
@@ -131,66 +121,72 @@ class ArucoDetector:
         corners, ids, _ = aruco.detectMarkers(gray_image, self.aruco_dict, parameters=self.parameters,
                                               cameraMatrix=self.camera_matrix, distCoeff=self.distortion_coeffs)
 
-        if ids is not None:
-            ids = ids.flatten() 
-        else:
+        if ids == None:
             self.corner_pub.publish(Polygon()) # Send empty 
-            return
-        
-        # Objects detected
-        for i in range(len(ids)):
-            # Only send information regarding the target marker
-            if ids[i] != self.target_id:
-                continue
+           
+        else:
+            ids = ids.flatten() 
+            
+            # Objects detected
+            for i in range(len(ids)):
+                # Only send information regarding the target marker
+                if ids[i] != self.target_id:
+                    continue
 
-            # Estimate pose
-            rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners[i], self.aruco_size, self.camera_matrix,
-                                                            self.distortion_coeffs)
-            rvec = rvec.flatten()
-            tvec = tvec.flatten()
+                # Estimate pose
+                rvec, tvec, _ = aruco.estimatePoseSingleMarkers(corners[i], self.aruco_size, self.camera_matrix,
+                                                                self.distortion_coeffs)
+                rvec = rvec.flatten()
+                tvec = tvec.flatten()
 
-            # Draw the marker axis and border
-            if self.stream_video:
+                # Draw the marker axis and border
                 cv2.aruco.drawAxis(cv, self.camera_matrix, self.distortion_coeffs, rvec, tvec, self.aruco_size)
                 cv2.aruco.drawDetectedMarkers(cv, corners)
 
-            if ids[i] not in self.on_sight:
-                self.on_sight.append(ids[i])
-                self.knowledge[ids[i]] = (tvec, rvec)
+                if ids[i] not in self.on_sight:
+                    self.on_sight.append(ids[i])
+                    self.knowledge[ids[i]] = (tvec, rvec)
 
-            # Broadcast the static transform of target marker (median of n samples found)
-            if len(self.target_positions) < self.target_samples_required:
-                self.target_positions.append((tvec, rvec, corners[i][0]))
-                continue
+                # Broadcast the static transform of target marker (median of n samples found)
+                if len(self.target_positions) < self.target_samples_required:
+                    self.target_positions.append((tvec, rvec, corners[i][0]))
+                    continue
 
-            elif len(self.target_positions) == self.target_samples_required:
-                self.target_positions.append((tvec, rvec, corners[i][0])) # Ensure that the last sample is included so that transform is not sent again
-                median_tvec = np.median([pos[0] for pos in self.target_positions], axis=0)
-                median_rvec = np.median([pos[1] for pos in self.target_positions], axis=0)
-                median_quat = tft.quaternion_from_euler(median_rvec[0], median_rvec[1], median_rvec[2])
+                elif len(self.target_positions) == self.target_samples_required:
+                    self.target_positions.append((tvec, rvec, corners[i][0])) # Ensure that the last sample is included so that transform is not sent again
+                    median_tvec = np.median([pos[0] for pos in self.target_positions], axis=0)
+                    median_rvec = np.median([pos[1] for pos in self.target_positions], axis=0)
+                    median_quat = tft.quaternion_from_euler(median_rvec[0], median_rvec[1], median_rvec[2])
 
-                # Get target's pose in inertial frame
-                tvec_inertial = self.tf_listener.transformPoint(self.inertial_frame_id, 
-                                                                PointStamped(header=Header(stamp=rospy.Time(0), frame_id=self.camera_frame_id),
-                                                                                                        point=Point(*median_tvec)))
-                quat_inertial = self.tf_listener.transformQuaternion(self.inertial_frame_id, 
-                                                                QuaternionStamped(header=Header(stamp=rospy.Time(0), frame_id=self.camera_frame_id),
-                                                                                                    quaternion=Quaternion(*median_quat)))
+                    # Get target's pose in inertial frame
+                    tvec_inertial = self.tf_listener.transformPoint(self.inertial_frame_id, 
+                                                                    PointStamped(header=Header(stamp=rospy.Time(0), frame_id=self.camera_frame_id),
+                                                                                                            point=Point(*median_tvec)))
+                    quat_inertial = self.tf_listener.transformQuaternion(self.inertial_frame_id, 
+                                                                    QuaternionStamped(header=Header(stamp=rospy.Time(0), frame_id=self.camera_frame_id),
+                                                                                                        quaternion=Quaternion(*median_quat)))
 
-                rospy.loginfo(f'Found at: {tvec_inertial.point}')
-                self.tf_broadcaster.sendTransform(TransformStamped(
-                    header=Header(stamp=rospy.Time.now(), frame_id=self.inertial_frame_id),
-                    child_frame_id=self.object_frame_id,
-                    transform=Transform(
-                        translation=Vector3(tvec_inertial.point.x, tvec_inertial.point.y, tvec_inertial.point.z),
-                        rotation=quat_inertial.quaternion
-                    )
+                    rospy.loginfo(f'Found at: {tvec_inertial.point}')
+                    self.tf_broadcaster.sendTransform(TransformStamped(
+                        header=Header(stamp=rospy.Time.now(), frame_id=self.inertial_frame_id),
+                        child_frame_id=self.object_frame_id,
+                        transform=Transform(
+                            translation=Vector3(tvec_inertial.point.x, tvec_inertial.point.y, tvec_inertial.point.z),
+                            rotation=quat_inertial.quaternion
+                        )
+                    ))
+                
+                # Broadcast target's corners to detection topic (median of last n samples found)
+                self.corner_pub.publish(Polygon(
+                    points=[Point(x=corner[0], y=corner[1], z=tvec[2]) for corner in corners[i][0]]
                 ))
-            
-            # Broadcast target's corners to detection topic (median of last n samples found)
-            self.corner_pub.publish(Polygon(
-                points=[Point(x=corner[0], y=corner[1], z=tvec[2]) for corner in corners[i][0]]
-            ))
+                
+        result, jpeg_image = cv2.imencode('.jpg', cv)
+        compressed_image_msg = CompressedImage()
+        compressed_image_msg.header.stamp = rospy.Time.now()
+        compressed_image_msg.format = "jpeg"
+        compressed_image_msg.data = jpeg_image.tobytes()
+        self.send_image.publish(compressed_image_msg)
 
 if __name__ == '__main__':
     rospy.init_node('aruco_detector_server', anonymous=True)
