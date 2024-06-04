@@ -28,7 +28,7 @@ class ArucoDetector:
         self.reset_sub = rospy.Subscriber('/reset_vision', Bool, self._reset)
         #self.reached_goal_sub = rospy.Subscriber(goal_publisher_topic, Bool, self._reset)
         self.corner_pub = rospy.Publisher(target_detection_topic, Polygon, queue_size=10)
-        #self.send_image = rospy.Publisher('/img_comp', CompressedImage, queue_size = 10)
+        self.send_image = rospy.Publisher(camera_topic, CompressedImage, queue_size = 10)
         #self.active_ibvs_controller_pub = rospy.Publisher(ibvs_activate_topic, Bool, queue_size=10)
         #self.done_vision_pub = rospy.Publisher(done_vision_topic, Bool, queue_size=10)
 
@@ -115,7 +115,7 @@ class ArucoDetector:
         compressed_image_msg.header.stamp = rospy.Time.now()
         compressed_image_msg.format = "jpeg"
         compressed_image_msg.data = jpeg_image.tobytes()
-        #self.send_image.publish(compressed_image_msg)
+        self.send_image.publish(compressed_image_msg)
         if not ret:
             rospy.logerr("Failed to capture image")
             return

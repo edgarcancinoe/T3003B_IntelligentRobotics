@@ -101,7 +101,7 @@ pose_controller:
   
 ibvs:
   kp: 0.035
-  e_tolerance: 290
+  e_tolerance: 320
 
 orientation_controller:
   kp: 0.08

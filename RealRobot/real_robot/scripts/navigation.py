@@ -198,6 +198,21 @@ class Navigator:
             # Letter B (2.88,1.62)
             self.call_bug_service(point,2)
             self.call_orientation_service(0)
+            point = Point(2.50, 1.62, 0.0)
+            self.call_bug_service(point,2)
+            rospy.sleep(1)
+            self.call_gripper_service(True)
+            
+            vel = Twist(linear=Vector3(-0.1, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+            self.cmd_vel_publisher.publish(vel)
+            rospy.sleep(1)
+            vel = Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+            self.cmd_vel_publisher.publish(vel)
+            rospy.sleep(1)
+            point = Point(0.01, 0.01, 0.0)
+            self.call_bug_service(point,2)
+            rospy.sleep(1)
+            self.call_orientation_service(0)
             # self.bug_commander.publish(Bool(True))
 
         elif self.state == 'TARGET_LOST':
