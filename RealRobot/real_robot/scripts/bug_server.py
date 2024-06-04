@@ -73,6 +73,7 @@ class Navigator:
         #self.orientation_controller_pub = rospy.Publisher(orientation_controller_topic, Float32, queue_size=10)
         # Command velocity
         self.cmd_vel_pub = rospy.Publisher(cmd_vel_topic, Twist, queue_size=10)
+        
 
     def _get_front_left_right_scan_max_ranges(self, theta_1, theta_2, R, x_lim):
 
@@ -250,11 +251,15 @@ class Navigator:
         """
             Orientate the robot towards the goal and wait until the orientation is achieved
         """
+        
         if self.final_goal is not None:
+            #print("LLAMAR A ORIENTATION")
             self.state = 'OrientateToGoal'
             #self._activate_orientation_controller()
             #print("send GOAL ORIENTATION")
+            #print(self._final_goal_orientation_yaw())
             self._callback_orientation_service(Float32(self._final_goal_orientation_yaw()))
+            print("Llamo al servicio")
             #self._set_goal_orientation(self._final_goal_orientation_yaw())
             #while not self.unlocked and not rospy.is_shutdown():
             #    rospy.sleep(0.1)
@@ -408,14 +413,19 @@ class Navigator:
         orientation = tft.quaternion_from_euler(0,0,self._yaw_to_point(point))
         pose = Pose(position=point, 
                     orientation=Quaternion(*orientation))
+        print("PRIMER ENTRADA")
         self._set_goal(pose)
         self._orientate_towards_goal()
         #self._callback_orientation_service()
         self._move_towards_goal()
 
     def _callback_orientation_service(self, goal):
+        #print("Llamado a Orientation")
+        #print(goal)
         rospy.wait_for_service('orientation_controller')
+        print("Dejo de esperar")
         try:
+            print("Llamado a Orientation")
             orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
             response = orientation_controller(goal)
             rospy.loginfo(f"Orientation Controler Finish {response.finish}")
@@ -512,8 +522,6 @@ def handle_bug(req):
     odometry_topic = params['odometry_topic']
     lidar_topic = params['lidar_topic']
     #pose_controller_topic = params['pose_controller_topic']
-    
-
     #pose_controller_topic = rospy.get_param('/pose_controller_topic')
     #pose_controller_activate_topic = rospy.get_param('/pose_control_activate_topic')
     #orientation_controller_topic = rospy.get_param('/orientation_controller_topic')

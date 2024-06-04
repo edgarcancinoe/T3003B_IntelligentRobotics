@@ -1,4 +1,4 @@
 # OrientationService.srv
-float32 goal
+std_msgs/Float32 goal
 ---
 bool finish

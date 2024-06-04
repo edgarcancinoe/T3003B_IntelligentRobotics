@@ -6,7 +6,7 @@ from std_msgs.msg import Bool, Float32
 from geometry_msgs.msg import Vector3, Twist, Point
 from nav_msgs.msg import Odometry
 from real_robot.srv import OrientationService, OrientationServiceResponse
-from real_robot.util import get_orientation_controller_params
+from real_robot_util.util import get_orientation_controller_params
 import tf.transformations as tf
 
 class Puzzlebot_orientation_controller():
@@ -171,7 +171,7 @@ def handle_orientation(req):
     # Initialize controller
     puzzlebot_controller = Puzzlebot_orientation_controller(
                                                 active = active,
-                                                goal = req.goal,
+                                                goal = req.goal.data,
                                                 starting_orientation = starting_orientation,
                                                 kp =  kp,
                                                 ki = ki,

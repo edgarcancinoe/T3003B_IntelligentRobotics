@@ -28,7 +28,7 @@ class Puzzlebot_controller():
 
         # Initial state (inertial frame)
         self.s : Pose = Pose(position=starting_pose, 
-                             orientation=tf.quaternion_from_euler(0.0, 0.0, starting_orientation))
+                             orientation=Quaternion(*tf.quaternion_from_euler(0.0, 0.0, starting_orientation)))
 
         # Set tolerances 
         self.r_tolerance : float = r_tolerance
@@ -138,7 +138,6 @@ class Puzzlebot_controller():
                                 angular = Vector3(x = 0.0, y = 0.0, z = w))
                     
             self.cmd_vel_publisher.publish(twist_msg)
-            self.error_publisher.publish(Float32(r))  
             self.reached_goal = True
             return        
         
@@ -146,7 +145,6 @@ class Puzzlebot_controller():
                             angular = Vector3(x = 0.0, y = 0.0, z = w))
                 
         self.cmd_vel_publisher.publish(twist_msg)
-        self.error_publisher.publish(Float32(r))
 
 
 def handle_pose(req):
