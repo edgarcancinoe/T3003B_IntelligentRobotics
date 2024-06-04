@@ -1,4 +1,5 @@
 import rospy
+import numpy as np
 
 def get_global_params():
     # Reading parameters from the ROS parameter server
@@ -33,7 +34,7 @@ def get_bug_navigation_params():
         'min_d_hitpoint': rospy.get_param('/bug_navigation/bug2/min_d_hitpoint') # For Bug2
     }
 
-    return bug_navigation_params | get_global_params()
+    return {**bug_navigation_params, **get_global_params()}
 
 def get_ibvs_params():
     ibvs_params = {
@@ -58,7 +59,7 @@ def get_ibvs_params():
         'e_tolerance': rospy.get_param('/ibvs/e_tolerance')
     }
     
-    return ibvs_params | get_global_params()
+    return {**ibvs_params, **get_global_params()}
 
 
 def get_kalman_localisation_params():
@@ -70,11 +71,12 @@ def get_kalman_localisation_params():
         'k_r': rospy.get_param('/kalman_localisation/k_r')
     }
     
-    return kalman_localisation_params | get_global_params()
+    return {**kalman_localisation_params, **get_global_params()}
 
 
 def get_map_localisation_params():
     map_localisation_params = {
+        'map_path': rospy.get_param('/map_path'),
         'lidar_resolution': rospy.get_param('/map_localisation/lidar_resolution'),
         'lidar_offset': np.radians(rospy.get_param('/map_localisation/lidar_offset')), # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
         'num_ransac_iterations': rospy.get_param('/map_localisation/num_ransac_iterations'),
@@ -83,8 +85,7 @@ def get_map_localisation_params():
         'search_range': np.radians(rospy.get_param('/map_localisation/search_range')),
         'landmark_distance_threshold': rospy.get_param('/map_localisation/landmark_distance_threshold')
     }
-
-    return map_localisation_params | get_global_params()
+    return {**map_localisation_params, **get_global_params()}
     
 
 def get_orientation_controller_params():
@@ -95,7 +96,7 @@ def get_orientation_controller_params():
             'min_w_to_move': rospy.get_param('/min_w_to_move'),
             'max_w': rospy.get_param('/max_w'),
     }            
-    return orientation_controller_params | get_global_params()
+    return {**orientation_controller_params, **get_global_params()}
 
 
 def get_pose_controller_params():
@@ -109,11 +110,12 @@ def get_pose_controller_params():
         'min_v': rospy.get_param('/min_v'),
     }
             
-    return pose_controller_params | get_global_params()
+    return {**pose_controller_params, **get_global_params()}
 
 
 def get_robot_state_pub_params():
-    return {'update_rate': rospy.get_param('/rviz_publishing_rate')}
+    robot_state_params = {'update_rate': rospy.get_param('/rviz_publishing_rate')}
+    return {**robot_state_params, **get_global_params()}
 
 
 def get_uncertainty_localisation_params():
@@ -124,7 +126,7 @@ def get_uncertainty_localisation_params():
         'k_r': rospy.get_param('/uncertainty_localisation/k_r')
     }
     
-    return uncertainty_localisation_params | get_global_params()
+    return {**uncertainty_localisation_params, **get_global_params()}
 
 
 def get_vision_params():
@@ -143,4 +145,4 @@ def get_vision_params():
         'camera_topic': rospy.get_param('/camera_topic'),
     }
 
-    return vision_params | get_global_params()
+    return {**vision_params, **get_global_params()}

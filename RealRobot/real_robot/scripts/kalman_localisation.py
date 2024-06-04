@@ -5,16 +5,15 @@ from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Vector3, Point, Quaternion, Pose, Twist, PoseWithCovariance, TwistWithCovariance, PoseArray
 from nav_msgs.msg import Odometry
 import numpy as np
-from puzzlebot_util.util import *
+from real_robot_util.util import get_kalman_localisation_params
 import tf.transformations as tft
 import yaml
 
 ### Node purpose: Listen to /wl and /wr topics and output estimated robot states
 class Locater():
-    def __init__(self, odometry_topic, map_topic, odom_frame, map_frame, robot_frame_name, 
+    def __init__(self, map_topic, map_frame, robot_frame_name, 
                  wheel_radius, track_length, starting_state, map_path, odom_rate, k_l, k_r, wl, wr):
-                
-        self.odom_frame = odom_frame
+                         
         self.map_frame = map_frame
 
         self.child_frame_id = robot_frame_name
@@ -46,8 +45,7 @@ class Locater():
         self.landmarks = self.load_map(map_path)
 
         # Publisher
-        rospy.logwarn('Publishing to ' + odometry_topic + ' topic for estimated pose (DR odometry)')
-        self.odom_publisher = rospy.Publisher(odometry_topic, Odometry, queue_size=10)
+        rospy.logwarn('Publishing to ' + map_topic + ' topic for estimated pose (DR odometry)')
         self.map_publisher = rospy.Publisher(map_topic, Odometry, queue_size=10)
 
         # wl wr Subscriber
@@ -69,19 +67,18 @@ class Locater():
         self.last_timestamp = rospy.Time.now()
 
     def _landmark_detection_callback(self, detecection_array):
-        
         self.detected_landmarks = {}
         for i, detection in enumerate(detecection_array.poses):
-
             # Find which landmark is the closest to the detection
             min_distance = float('inf')
+            closest_landmark = None
             for j, landmark in enumerate(self.landmarks):
-                distance = np.linalg.norm(np.array([detection.position.x, detection.position.y]) - landmark)
+                distance = np.linalg.norm([detection.position.x - landmark[0], detection.position.y - landmark[1]])
                 if distance < min_distance:
                     min_distance = distance
                     closest_landmark = j
             self.detected_landmarks[closest_landmark] = detection
-        
+    
     def _publishMap(self):
         self.map_publisher.publish(Odometry(
             header = Header(frame_id = self.map_frame, stamp = rospy.Time.now()),
@@ -123,9 +120,7 @@ class Locater():
         return dt
     
     def _system_gradient(self, theta, v, w):
-        return np.array([v * np.cos(theta), 
-                         v * np.sin(theta), 
-                         w])
+        return np.array([v * np.cos(theta), v * np.sin(theta), w])
     
     def _rk4_delta(self, theta, v, w, dt):
         k1 = self._system_gradient(theta, v, w)
@@ -152,8 +147,8 @@ class Locater():
         """
         # X is the state vector X = [x, y, theta]
         deltaX = self._rk4_delta(theta, v, w, dt)
-        return np.array([self.mu[0] + deltaX[0], self.mu[1] + deltaX[1], self.mu[2] + deltaX[2]])
-    
+        return self.mu + deltaX
+
     def _noise_propagation_matrix(self, dt):
         """
             Nabla matrix used to propagate the wheel speed noise in the system
@@ -243,7 +238,7 @@ class Locater():
             G_k = self._jacobianG(dx, dy, z_hat_k) # (8x3)
             # Zk: Uncertainty propagation
             # (8x3)(3x3) (3x8) = (3,8)
-            Z_k = G_k @ sigma_hat @ G_k.T + np.eye(2*len(landmarks_on_sight)) * 4.5 
+            Z_k = G_k @ sigma_hat @ G_k.T + np.eye(2*len(landmarks_on_sight)) * .25 
             # K_k: Kalman Gain
             K_k = sigma_hat @ G_k.T @ np.linalg.pinv(Z_k) # (3,8)
             
@@ -280,23 +275,20 @@ if __name__ == '__main__':
     rospy.init_node('kalman_localisation')
 
     # Get Global ROS parameters
-    params = get_global_params()
-    map_path = '/home/edgar/catkin_ws/src/T3003B_IntelligentRobotics/LidarWorkspace/slam/maps/gazebo_arena_landmarks.yaml'
+    params = get_kalman_localisation_params()
 
-    locater = Locater(odometry_topic=rospy.get_param('/odometry_topic'), 
-                      map_topic = rospy.get_param('/map_topic'),
-                      odom_frame=rospy.get_param('/odom_frame'),
-                      map_frame=rospy.get_param('/map_frame'),
-                      robot_frame_name=params['robot_frame_name'], 
-                      wheel_radius=params['wheel_radius'],
-                      track_length=params['track_length'], 
-                      starting_state=params['starting_state'],
-                      map_path=map_path,
-                      odom_rate=rospy.get_param('~odom_rate'),
-                      k_l=rospy.get_param('~k_l'),
-                      k_r=rospy.get_param('~k_r'),
-                      wl=rospy.get_param('~wl_topic'),
-                      wr=rospy.get_param('~wr_topic'))
+    locater = Locater(map_topic = params['odometry_topic'], 
+                        map_frame = params['inertial_frame'],
+                        robot_frame_name = params['robot_frame'],
+                        wheel_radius = params['wheel_radius'],
+                        track_length = params['track_length'],
+                        starting_state = params['starting_state'],
+                        map_path = params['map_path'],
+                        odom_rate = params['control_rate'],
+                        k_l = params['k_l'],
+                        k_r = params['k_r'],
+                        wl = params['wl_topic'],
+                        wr = params['wr_topic'])
 
     try:
         rospy.loginfo('Localisation node running')

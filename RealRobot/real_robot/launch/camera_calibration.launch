@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+        <env name="ROSCONSOLE_FORMAT" value="[${severity}] [${time}] [${node}]: ${message}"/>
+        <rosparam file="$(find real_robot)/config/config_real_robot.yaml" command="load" />
+        <node pkg="real_robot" type="vision.py" name="vision" output="screen"/>
+</launch>

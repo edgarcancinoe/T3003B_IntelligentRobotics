@@ -15,13 +15,13 @@ camera_matrix: [[530.466941, 0, 205],
 distortion_coefficients: [0.0, 0.0, 0.0, 0.0, 0.0]
 
 focal_length_pixel: 530.466941
-target_id: 3
+target_id: 1
 target_aruco_size: 0.04
-target_z_desired: 0.126
-target_corner_locations: [[202.0, 461.0], 
-                            [193.0, 446.0], 
-                            [371.0, 242.0], 
-                            [369., 450.]]
+target_z_desired: 0.19
+target_corner_locations: [[221., 441.],
+                          [213., 287.],
+                          [350., 279.],
+                          [349., 429.]]
 
 station_id: 1
 station_aruco_size: 0.04
@@ -34,7 +34,7 @@ station_corner_locations: [[202.0, 461.0],
 
 ############### FILES #################
 #######################################
-map_path: '/home/puzzlebot/catkin_ws/src/T3003B_IntelligentRobotics/RealRobot/real_robot/config/config_real_robot.yaml'
+map_path: '/home/puzzlebot/catkin_ws/src/T3003B_IntelligentRobotics/RealRobot/real_robot/map/real_arena_map.yaml'
 #######################################
 
 ##### TF and frames #####
@@ -42,8 +42,6 @@ map_path: '/home/puzzlebot/catkin_ws/src/T3003B_IntelligentRobotics/RealRobot/re
 camera_frame: 'camera_link'
 object_frame: 'aruco_box'
 robot_frame: 'base_link'
-odom_frame: 'odom'
-map_frame: 'map'
 inertial_frame: 'map'
 #########################
 
@@ -75,18 +73,18 @@ uncertainty_localisation:
 
 
 kalman_localisation:
-  k_l: 0.05
-  k_r: 0.05
+  k_l: 0.005
+  k_r: 0.005
 
 
 map_localisation:
   lidar_resolution: 1147
   lidar_offset: -90 # Lidar offset is -90 for real lidar and 90 for simulated in gazebo.
-  num_ransac_iterations: 75
-  ransac_d_threshold: 0.06
-  min_ransac_inliers: 60
+  num_ransac_iterations: 85
+  ransac_d_threshold: 0.01
+  min_ransac_inliers: 50
   search_range: 60
-  landmark_distance_threshold: 0.25
+  landmark_distance_threshold: 0.65
 
 pose_controller:
   k1: 0.08
@@ -100,7 +98,6 @@ pose_controller:
 ibvs:
   kp: 0.4
   e_tolerance: 12
-
 
 orientation_controller:
   kp: 0.08
