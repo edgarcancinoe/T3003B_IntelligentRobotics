@@ -1,0 +1,4 @@
+# OrientationService.srv
+float32 goal
+---
+bool finish

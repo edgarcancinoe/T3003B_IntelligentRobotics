@@ -7,7 +7,7 @@ from nav_msgs.msg import Odometry
 import numpy as np
 import tf
 import tf.transformations as tft
-from puzzlebot_util.util import *
+from real_robot_util.util import get_global_params
 #Service
 from real_robot.srv import GripperService, BugService
 
@@ -18,7 +18,7 @@ class Navigator:
                         object_frame_id, 
                         target_detection_topic: str, 
                         ibvs_activate_topic: str,
-                        #bug_activate_topic: str,
+                        bug_activate_topic: str,
                         #pose_controller_activate_topic: str,
                         #pose_controller_topic: str,
                         #orientation_controller_activate_topic,
@@ -31,9 +31,12 @@ class Navigator:
         self.inertial_frame_id = inertial_frame_id
         self.object_frame_id = object_frame_id
 
+        #Open Gripper
+
         # Initialize the control publishers
         self.ibvs_commander = rospy.Publisher(ibvs_activate_topic, Bool, queue_size=10)
-        #self.bug_commander = rospy.Publisher(bug_activate_topic, Bool, queue_size=10)
+        self.call_gripper_service(True)
+        self.bug_commander = rospy.Publisher(bug_activate_topic, Bool, queue_size=10)
 
         #self.pose_controller_activate_publisher = rospy.Publisher(pose_controller_activate_topic, Bool, queue_size=10)
         #self.pose_controller_publisher = rospy.Publisher(pose_controller_topic, Pose, queue_size=10)
@@ -85,7 +88,7 @@ class Navigator:
             #Letter B (2.88,-1.62)
             point = Point(2.50, -1.62, 0.0)
             self.call_bug_service(point,2)
-            #self.bug_commander.publish(Bool(True))
+            # self.bug_commander.publish(Bool(True))
             
         elif self.state == 'ALIGNED TO TARGET':
             self.state = 'TARGET_REACHED'
@@ -118,6 +121,7 @@ class Navigator:
     def call_bug_service(self, point, bug):
         rospy.wait_for_service('active_bug')
         try:
+            print('LLAMAR A GRIPPER')
             active_bug = rospy.ServiceProxy('active_bug', BugService)
             response = active_bug(point,bug)
             rospy.loginfo(f"Bug Finish: {response.finish}")
@@ -163,12 +167,15 @@ class Navigator:
             return
 
         if self.state == 'NO_TARGET_DETECTED':
+            print("IR AL ARUCO")
             # Navigation: Searching for the target 
             self.busy = True
 
         elif self.state == 'TARGET_DETECTED':
             # Compute the desired point and send the command to pose controller
+            print("IR AL ARUCO")
             self.busy = True
+            self.call_gripper_service(True)
             self.ibvs_commander.publish(Bool(True))
 
         elif self.state == 'ALIGNED TO TARGET':
@@ -228,27 +235,30 @@ class Navigator:
                                          
 if __name__ == '__main__':
     rospy.init_node('navigation_node', anonymous=True)
+    params = get_global_params()
 
-    navigator_rate = rospy.get_param('/navigator_rate')
-    inertial_frame_id = rospy.get_param('/inertial_frame')
-    object_frame_id = rospy.get_param('/object_frame')
-    target_detection_topic = rospy.get_param('/target_detection_topic')
-    ibvs_activate_topic = rospy.get_param('/ibvs_activate_topic')
-    #bug_activate_topic = rospy.get_param('/bug_activate_topic')
+    navigator_rate = params['navigation_rate']
+    inertial_frame_id = params['inertial_frame']
+    object_frame_id = params['object_frame']
+    target_detection_topic = params['aruco_detection_topic']
+    ibvs_activate_topic = params['ibvs_activate_topic']
+    bug_activate_topic = params['bug_activate_topic']
+    unlock_topic = params['ibvs_done_topic']
+    cmd_vel_topic = params['commands_topic']
+    odometry_topic = params['odometry_topic']
+
     #pose_controller_topic = rospy.get_param('/pose_controller_topic')
     #pose_controller_activate_topic = rospy.get_param('/pose_control_activate_topic')
     #orientation_controller_topic = rospy.get_param('/orientation_controller_topic')
     #orientation_controller_activate_topic = rospy.get_param('/orientation_control_activate_topic')
-    unlock_topic = rospy.get_param('/finish_target_topic')
-    cmd_vel_topic = rospy.get_param('/commands_topic')
-    odometry_topic = rospy.get_param('/sim_odom_topic')
+    
 
     navigator = Navigator(navigator_rate, 
                             inertial_frame_id,
                             object_frame_id,
                             target_detection_topic, 
                             ibvs_activate_topic,
-                            #bug_activate_topic,
+                            bug_activate_topic,
                             #pose_controller_activate_topic,
                             #pose_controller_topic,
                             #orientation_controller_activate_topic,
@@ -256,8 +266,5 @@ if __name__ == '__main__':
                             cmd_vel_topic,
                             odometry_topic,
                             unlock_topic)
-
     # Spin the node
     rospy.spin()
-
-

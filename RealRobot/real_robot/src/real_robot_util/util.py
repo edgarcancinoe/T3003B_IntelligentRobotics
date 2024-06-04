@@ -14,11 +14,15 @@ def get_global_params():
         'commands_topic': rospy.get_param('/commands_topic'),
         'lidar_topic': rospy.get_param('/lidar_topic'),
         'odometry_topic': rospy.get_param('/odometry_topic'),
+        'ibvs_activate_topic': rospy.get_param('/ibvs_activate_topic'),
+        'bug_activate_topic': rospy.get_param('/bug_activate_topic'),
         'wl_topic': rospy.get_param('/wl_topic'),
         'wr_topic': rospy.get_param('/wr_topic'),
         'control_rate': rospy.get_param('/control_rate'),
         'navigation_rate': rospy.get_param('/navigation_rate'),
-        'starting_state': rospy.get_param('/starting_state')
+        'starting_state': rospy.get_param('/starting_state'),
+        'unlock': rospy.get_param('/unlock_topic'),
+        'ibvs_done_topic': rospy.get_param('/ibvs_done_topic')
     }
 
     return global_params
@@ -26,6 +30,7 @@ def get_global_params():
 
 def get_bug_navigation_params():
     bug_navigation_params = {
+        'r_tolerance': rospy.get_param('/pose_controller/r_tolerance'),
         'horizontal_tolerance': rospy.get_param('/bug_navigation/horizontal_tolerance'),
         'frontal_tolerance': rospy.get_param('/bug_navigation/frontal_tolerance'),
         'lidar_resolution': rospy.get_param('/bug_navigation/lidar_resolution'),
@@ -140,8 +145,8 @@ def get_vision_params():
         'station_z_desired': rospy.get_param('/station_z_desired'),
         'station_corner_locations': np.array([rospy.get_param('/station_corner_locations')]),
         'camera_matrix': np.array(rospy.get_param('/camera_matrix')),
-        'distortion_coeffs': np.array(rospy.get_param('/distortion_coeffs')),
-        'target_detection_topic': rospy.get_param('/target_detection_topic'),
+        'distortion_coeffs': np.array(rospy.get_param('/distortion_coefficients')),
+        'target_detection_topic': rospy.get_param('/aruco_detection_topic'),
         'camera_topic': rospy.get_param('/camera_topic'),
     }
 

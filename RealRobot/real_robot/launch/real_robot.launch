@@ -5,9 +5,14 @@
         
         <!-- Send static transform -->
         <node pkg="tf2_ros" type="static_transform_publisher" name="base_joint" args="0 0 0.1 0 0 0 map base_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="chassis_joint" args="0  0  0.032  0  0  0   base_link   chassis"/>
         <node pkg="tf2_ros" type="static_transform_publisher" name="lidar_joint" args="0 0 0.1 0 0 0 base_link lidar_link"/>
         <node pkg="tf2_ros" type="static_transform_publisher" name="laser_joint" args="0 0 0 3.1415926535 0 0 lidar_link laser"/>
         
+        <node   pkg="tf2_ros" 
+                type="static_transform_publisher" 
+                name="camera_joint"
+                args="0.07 0.0 0.058  -1.57079632679 0 -1.57079632679   chassis   camera_link"/>
         <include file="$(find rplidar_ros)/launch/rplidar_a1.launch"></include>
 
         <rosparam file="$(find real_robot)/config/config_real_robot.yaml" command="load"/>
@@ -16,4 +21,12 @@
         <node pkg="real_robot" type="robot_state_pub.py" name="robot_state_pub" output="screen"/>
         <node pkg="real_robot" type="kalman_localisation.py" name="kalman_localisation" output="screen"/>
         <node pkg="real_robot" type="map_localisation.py" name="map_localisation" output="screen"/>
+        <node pkg="real_robot" type="gripper_server.py" name="gripper_server" output="screen" />
+        <node pkg="real_robot" type="bug_server.py" name="bug_server" output="screen" />
+        <node pkg="real_robot" type="navigation.py" name="navigation" output="screen" />
+        <node pkg="real_robot" type="vision.py" name="vision" output="screen" />
+        <node pkg="real_robot" type="ibvs.py" name="ibvs_controller" output="screen"/>
+
+
+
 </launch>

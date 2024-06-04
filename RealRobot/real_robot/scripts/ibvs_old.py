@@ -7,23 +7,14 @@ from geometry_msgs.msg import Vector3, Twist, Polygon, TransformStamped
 import tf2_ros
 import tf.transformations as tft
 import math
-from real_robot_util.util import get_ibvs_params
 
 class Puzzlebot_Visual_Controller():
     def __init__(self, kp, desired_corner_locations, z_desired, focal_length_pixel,
                  error_tolerance, commands_topic, input_topic, ibvs_activate_topic, 
-                 send_done_topic, control_rate, robot_frame, camera_frame,max_w, min_w, min_w_to_move, max_v, min_v, min_v_to_move):
+                 send_done_topic, control_rate, robot_frame, camera_frame):
 
         # Proportional controller gains
         self.kp = kp
-
-        # Limit velocities
-        self.max_w = max_w
-        self.min_w = min_w
-        self.min_w_to_move = min_w_to_move
-        self.min_v = min_v
-        self.max_v = max_v
-        self.min_v_to_move = min_v_to_move
 
         # Reference corner locations (format [u1 v1, u2 v2, u3 v3, u4 v4])
         self.p_desired = desired_corner_locations.flatten()
@@ -50,7 +41,7 @@ class Puzzlebot_Visual_Controller():
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         
-        rospy.sleep(15.0)  # Wait for tf2 to initialize
+        rospy.sleep(4.0)  # Wait for tf2 to initialize
 
         found = False
         while not found:
@@ -72,10 +63,10 @@ class Puzzlebot_Visual_Controller():
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
                 rospy.logerr("Could not find the transformation. Retrying...")
 
-        self.active = True
+        self.active = False
 
         rospy.Timer(rospy.Duration(1.0/control_rate), self.compute_output)    
-        self.target_on_sight = False
+        self.no_target_on_sight = True
     
     def _activate_controller(self, msg):
         self.active = msg.data
@@ -130,26 +121,22 @@ class Puzzlebot_Visual_Controller():
         return (roll, pitch, yaw)
 
     def vision_callback(self, msg):
-        if len(msg.points) == 0:
-            self.p = None
-            return
+        assert len(msg.points) == 4, 'The polygon must have 4 points'
         # Format [u1 v1, u2 v2, u3 v3, u4 v4]
         self.p = np.array([[point.x, point.y] for point in msg.points]).flatten()
         self.z_values = [point.z for point in msg.points]
-        self.target_on_sight = True
 
     def compute_output(self, _):
         if not self.active:
             return
                 
         # Proportional error
-        done = False
+        flag = False
         if self.p is not None:
-            #print("Firt if")
             e = self._compute_errors()
             if np.linalg.norm(e) <= self.error_tolerance:
                 rospy.logwarn('IBVS Goal reached')
-                done = True
+
             else:
                 # Compute cameras desired velocity for state s: [v*_x, v*_y, w*] (CAMERA FRAME)
                 u = [self.p[0], self.p[2], self.p[4], self.p[6]]
@@ -160,41 +147,24 @@ class Puzzlebot_Visual_Controller():
                 # Compute the desired linear and angular velocities in the robot frame
                 xi_dot_c = np.array([0.0, 0.0, s_dot[0], 0.0, s_dot[1], 0.0])
                 xi_dot_r = self.V_r_c_inv @ xi_dot_c
-                
-                # Sanity check on the angular velocity
-                #Angular velocities
-                if abs(xi_dot_r[5]) < self.min_w_to_move:
-                    xi_dot_r[5] = 0.0
-                elif abs(xi_dot_r[5]) < self.min_w:
-                    xi_dot_r[5] = np.sign(xi_dot_r[5]) * self.min_w
-                else:
-                    xi_dot_r[5] = np.clip(xi_dot_r[5], -self.max_w, self.max_w)
-
-                #Linear Velocities
-                if abs(xi_dot_r[0]) < self.min_v_to_move:
-                    xi_dot_r[0] = 0.0
-                elif abs(xi_dot_r[0]) < self.min_v:
-                    xi_dot_r[0] = np.sign(xi_dot_r[0]) * self.min_v
-                else:
-                    xi_dot_r[0] = np.clip(xi_dot_r[0], -self.max_v, self.max_v)
-
 
                 twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
                             angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
 
                 twist_msg.linear.x = xi_dot_r[0]
-                twist_msg.angular.z = xi_dot_r[5] * 0.4
-        # else:
-        #     done = True
-            if done:
-                twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
-                                angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
-                self.cmd_vel_publisher.publish(twist_msg)
-                self.reached_goal_publisher.publish(done)
-                rospy.logwarn('DONE')
-            elif not done:
-                self.cmd_vel_publisher.publish(twist_msg)
+                twist_msg.angular.z = xi_dot_r[5] * 0.6
 
+                self.no_target_on_sight = False
+                flag = True
+        
+        if not flag and self.no_target_on_sight:
+            print(flag, self.no_target_on_sight)
+            twist_msg = Twist( linear = Vector3(x = 0.0, y = 0.0, z = 0.0),
+                            angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
+            self.cmd_vel_publisher.publish(twist_msg)
+            self.no_target_on_sight = True
+        elif flag:
+            self.cmd_vel_publisher.publish(twist_msg)
         # Reset state
         # self.p = None
 
@@ -202,36 +172,20 @@ class Puzzlebot_Visual_Controller():
 if __name__=='__main__':
     # Initialise and Setup node
     rospy.init_node("ibvs_controller")
-    
-    params = get_ibvs_params()
 
-    # Get ROS parameters
-    input_topic = params['aruco_detection_topic']
-    ibvs_activate_topic = params['ibvs_activate_topic']
-    commands_topic = params['commands_topic']
-
-    z_desired = params['target_z_desired']
-
-    focal_length_pixel = params['focal_length_pixel']
-    desired_corner_locations = params['target_corner_locations']
-
-    control_rate = params['control_rate']
-
-    robot_frame = params['robot_frame']
-    camera_frame = params['camera_frame']
-
-    kp = params['kp']
-    e_tolerance = params['e_tolerance']
-
-    min_w = params['min_w']
-    min_w_to_move = params['min_w_to_move']
-    max_w = params['max_w']
-    max_v = params['max_v']
-    min_v = params['min_v']
-    min_v_to_move = params['min_v_to_move']
-
-    send_done_topic = params['ibvs_done_topic']
-    
+    # Get Global ROS parameters
+    ibvs_feed_topic = rospy.get_param('/target_detection_topic')
+    ibvs_activate_topic = rospy.get_param('/ibvs_activate_topic')
+    commands_topic = rospy.get_param('/commands_topic')
+    z_desired = rospy.get_param('/z_desired')
+    focal_length_pixel = rospy.get_param('/focal_length_pixel')
+    desired_corner_locations = np.array([rospy.get_param('/desired_corner_locations')])
+    control_rate = rospy.get_param('/control_rate')
+    robot_frame = rospy.get_param('/robot_frame')
+    camera_frame = rospy.get_param('/camera_frame')
+    kp = rospy.get_param('~kp')
+    e_tolerance = rospy.get_param('~e_tolerance')
+    send_done_topic = rospy.get_param('/unlock_topic', 'unlock')
 
     # Initialize controller
     puzzlebot_controller = Puzzlebot_Visual_Controller(kp=kp, 
@@ -240,19 +194,12 @@ if __name__=='__main__':
                                                         focal_length_pixel=focal_length_pixel,
                                                         error_tolerance = e_tolerance, 
                                                         commands_topic = commands_topic, 
-                                                        input_topic = input_topic,
+                                                        input_topic = ibvs_feed_topic,
                                                         ibvs_activate_topic = ibvs_activate_topic,
                                                         control_rate = control_rate, 
                                                         send_done_topic = send_done_topic,
                                                         robot_frame = robot_frame, 
-                                                        camera_frame = camera_frame,
-                                                        max_w = max_w, 
-                                                        min_w = min_w, 
-                                                        min_w_to_move = min_w_to_move,
-                                                        max_v = max_v,
-                                                        min_v = min_v,
-                                                        min_v_to_move = min_v_to_move
-                                                        )
+                                                        camera_frame = camera_frame)
     
     try:
         rospy.loginfo('The controller node is Running')

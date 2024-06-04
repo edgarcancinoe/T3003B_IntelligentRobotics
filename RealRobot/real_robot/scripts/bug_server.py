@@ -5,15 +5,17 @@ from std_msgs.msg import Header, Bool, Float32
 from geometry_msgs.msg import Pose, Point, Quaternion, Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
-from real_robot.srv import BugService, BugServiceResponse  
+from real_robot.srv import BugService, BugServiceResponse
+from real_robot.srv import OrientationService, PoseService
 import numpy as np
 import tf.transformations as tft
+from real_robot_util.util import get_bug_navigation_params
 
 class Navigator:
     def __init__(self, 
                  odom_topic, lidar_topic,
-                 pose_controller_activate_topic, pose_controller_topic,
-                 orientation_controller_activate_topic, orientation_controller_topic,
+                 #pose_controller_activate_topic, pose_controller_topic,
+                 #orientation_controller_activate_topic, orientation_controller_topic,
                  cmd_vel_topic, unlock_topic,
                  horizontal_tolerance, frontal_tolerance,
                  lidar_resolution,
@@ -64,11 +66,11 @@ class Navigator:
         # Publishers ------------ 
 
         # Pose controller activation and message
-        self.pose_controller_activate_pub = rospy.Publisher(pose_controller_activate_topic, Bool, queue_size=10)
-        self.pose_controller_pub = rospy.Publisher(pose_controller_topic, Pose, queue_size=10)
+        #self.pose_controller_activate_pub = rospy.Publisher(pose_controller_activate_topic, Bool, queue_size=10)
+        #self.pose_controller_pub = rospy.Publisher(pose_controller_topic, Pose, queue_size=10)
         # Orientation controller activation and message
-        self.orientation_controller_activate_pub = rospy.Publisher(orientation_controller_activate_topic, Bool, queue_size=10)
-        self.orientation_controller_pub = rospy.Publisher(orientation_controller_topic, Float32, queue_size=10)
+        #self.orientation_controller_activate_pub = rospy.Publisher(orientation_controller_activate_topic, Bool, queue_size=10)
+        #self.orientation_controller_pub = rospy.Publisher(orientation_controller_topic, Float32, queue_size=10)
         # Command velocity
         self.cmd_vel_pub = rospy.Publisher(cmd_vel_topic, Twist, queue_size=10)
 
@@ -189,28 +191,28 @@ class Navigator:
 
         self.unlocked = msg.data
 
-    def _activate_pose_controller(self):
-        self.pose_controller_activate_pub.publish(Bool(True))
+    #def _activate_pose_controller(self):
+    #    self.pose_controller_activate_pub.publish(Bool(True))
 
-    def _deactivate_pose_controller(self):
-        self.pose_controller_activate_pub.publish(Bool(False))
+    #def _deactivate_pose_controller(self):
+    #    self.pose_controller_activate_pub.publish(Bool(False))
     
-    def _activate_orientation_controller(self):
-        self.orientation_controller_activate_pub.publish(Bool(True))
+    #def _activate_orientation_controller(self):
+        #self.orientation_controller_activate_pub.publish(Bool(True))
     
-    def _deactivate_orientation_controller(self):
-        self.orientation_controller_activate_pub.publish(Bool(False))
+    #def _deactivate_orientation_controller(self):
+        #self.orientation_controller_activate_pub.publish(Bool(False))
     
-    def _set_goal_pose(self, goal_pose):
-        self._activate_pose_controller()
-        self.unlocked = False
-        self.pose_controller_pub.publish(goal_pose)
+    #def _set_goal_pose(self, goal_pose):
+    #    self._activate_pose_controller()
+    #    self.unlocked = False
+    #    self.pose_controller_pub.publish(goal_pose)
     
     def _set_goal_orientation(self, goal_orientation):
         """
             Orientation is a float message, in the range [0 2*pi]
         """
-        self._activate_orientation_controller()
+        #self._activate_orientation_controller()
         self.unlocked = False
         self.orientation_controller_pub.publish(Float32(goal_orientation))
 
@@ -232,6 +234,8 @@ class Navigator:
             Returns the yaw orientation to point towards a point from the robot's current position
         """
         yaw = np.arctan2(point.y - self.pose.position.y, point.x - self.pose.position.x)
+        print('Llamo a Yaw To Point')
+        print(np.mod(yaw + 2*np.pi, 2*np.pi))
         return np.mod(yaw + 2*np.pi, 2*np.pi)
     
     def _final_goal_orientation_yaw(self):
@@ -248,11 +252,13 @@ class Navigator:
         """
         if self.final_goal is not None:
             self.state = 'OrientateToGoal'
-            self._activate_orientation_controller()
-            self._set_goal_orientation(self._final_goal_orientation_yaw())
-            while not self.unlocked and not rospy.is_shutdown():
-                rospy.sleep(0.1)
-            self._deactivate_orientation_controller()
+            #self._activate_orientation_controller()
+            #print("send GOAL ORIENTATION")
+            self._callback_orientation_service(Float32(self._final_goal_orientation_yaw()))
+            #self._set_goal_orientation(self._final_goal_orientation_yaw())
+            #while not self.unlocked and not rospy.is_shutdown():
+            #    rospy.sleep(0.1)
+            #self._deactivate_orientation_controller()
             rospy.logwarn('Orientated towards goal')
             return True
         else:
@@ -345,8 +351,9 @@ class Navigator:
             # Move towards goal and set the state to MovingTowardsGoal
         
             self.state = 'MovingTowardsGoal'
-            self._activate_pose_controller()
-            self._set_goal_pose(self.final_goal)
+            self._callback_pose_service(self.final_goal)
+            #self._activate_pose_controller()
+            #self._set_goal_pose(self.final_goal)
 
             reached_goal = False
             
@@ -385,12 +392,13 @@ class Navigator:
                         rospy.sleep(1)
                         self._orientate_towards_goal()
                         self.state = 'MovingTowardsGoal'
-                        self._activate_pose_controller()
-                        self._set_goal_pose(self.final_goal)
+                        self._callback_pose_service(self.final_goal)
+                        #self._activate_pose_controller()
+                        #self._set_goal_pose(self.final_goal)
                         continue
         else:
             raise ValueError('No goal set')
-    
+
     def go_to_pose(self, pose):
         self._set_goal(pose)
         self._orientate_towards_goal()
@@ -402,7 +410,30 @@ class Navigator:
                     orientation=Quaternion(*orientation))
         self._set_goal(pose)
         self._orientate_towards_goal()
+        #self._callback_orientation_service()
         self._move_towards_goal()
+
+    def _callback_orientation_service(self, goal):
+        rospy.wait_for_service('orientation_controller')
+        try:
+            orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
+            response = orientation_controller(goal)
+            rospy.loginfo(f"Orientation Controler Finish {response.finish}")
+            return response.finish
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Service call failed: {e}")
+            return None      
+
+    def _callback_pose_service(self, goal):
+        rospy.wait_for_service('orientation_controller')  
+        try:
+            pose_controller = rospy.ServiceProxy('pose_controller', PoseService)
+            response = pose_controller(goal)
+            rospy.loginfo(f"Pose Controler Finish {response.finish}")
+            return response.finish
+        except rospy.ServiceException as e:
+            rospy.logger(f"Service call failed: {e}")
+            return None
     
 class Bug2Nav(Navigator):
     def __init__(self, *args, min_d_hitpoint=0.04):
@@ -477,26 +508,30 @@ class Bug0Nav(Navigator):
         
 def handle_bug(req):
     #Params
-    odometry_topic = rospy.get_param('/sim_odom_topic')
-    lidar_topic = rospy.get_param('/lidar_topic')
-    pose_controller_topic = rospy.get_param('/pose_controller_topic')
-    pose_controller_activate_topic = rospy.get_param('/pose_control_activate_topic')
-    orientation_controller_topic = rospy.get_param('/orientation_controller_topic')
-    orientation_controller_activate_topic = rospy.get_param('/orientation_control_activate_topic')
-    unlock_topic = rospy.get_param('/unlock_topic')
-    cmd_vel_topic = rospy.get_param('/commands_topic')
-    goal_tolerance = rospy.get_param('/pose_controller/r_tolerance') * 1.35
-    horizontal_tolerance = rospy.get_param('~horizontal_tolerance')
-    frontal_tolerance = rospy.get_param('~frontal_tolerance')
-    lidar_resolution = rospy.get_param('~lidar_resolution')
-    v = rospy.get_param('~v')
-    w = rospy.get_param('~w')
+    params = get_bug_navigation_params()
+    odometry_topic = params['odometry_topic']
+    lidar_topic = params['lidar_topic']
+    #pose_controller_topic = params['pose_controller_topic']
+    
 
-    min_d_hitpoint = rospy.get_param('~bug2/min_d_hitpoint')
+    #pose_controller_topic = rospy.get_param('/pose_controller_topic')
+    #pose_controller_activate_topic = rospy.get_param('/pose_control_activate_topic')
+    #orientation_controller_topic = rospy.get_param('/orientation_controller_topic')
+    #orientation_controller_activate_topic = rospy.get_param('/orientation_control_activate_topic')
+    unlock_topic = params['unlock']
+    cmd_vel_topic = params['commands_topic']
+    goal_tolerance = params['r_tolerance'] * 1.35
+    horizontal_tolerance = params['horizontal_tolerance']
+    frontal_tolerance = params['frontal_tolerance']
+    lidar_resolution = params['lidar_resolution']
+    v = params['v']
+    w = params['w']
+    min_d_hitpoint = params['min_d_hitpoint']
+
     if req.bug == 0:
         navigator = Bug0Nav(odometry_topic, lidar_topic, 
-                        pose_controller_activate_topic, pose_controller_topic,
-                        orientation_controller_activate_topic, orientation_controller_topic, 
+                        #pose_controller_activate_topic, pose_controller_topic,
+                        #orientation_controller_activate_topic, orientation_controller_topic, 
                         cmd_vel_topic, unlock_topic,
                         horizontal_tolerance, frontal_tolerance,
                         lidar_resolution, v, w, goal_tolerance, 'right')
@@ -504,8 +539,8 @@ def handle_bug(req):
         return  BugServiceResponse(True)
     elif req.bug == 2:
         navigator = Bug2Nav(odometry_topic, lidar_topic, 
-                        pose_controller_activate_topic, pose_controller_topic,
-                        orientation_controller_activate_topic, orientation_controller_topic, 
+                        #pose_controller_activate_topic, pose_controller_topic,
+                        #orientation_controller_activate_topic, orientation_controller_topic, 
                         cmd_vel_topic, unlock_topic,
                         horizontal_tolerance, frontal_tolerance,
                         lidar_resolution,v, w, goal_tolerance, 'left', min_d_hitpoint=min_d_hitpoint)
@@ -513,7 +548,6 @@ def handle_bug(req):
         return BugServiceResponse(True)
     else: return BugServiceResponse(False)
     
-        
 if __name__ == '__main__':
     rospy.init_node('bug_server', anonymous=True)
     service = rospy.Service('active_bug', BugService, handle_bug)

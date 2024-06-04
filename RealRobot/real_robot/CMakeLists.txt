@@ -59,6 +59,8 @@ add_service_files(
   FILES
   GripperService.srv
   BugService.srv
+  OrientationService.srv
+  PoseService.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -165,6 +167,9 @@ include_directories(
 catkin_install_python(PROGRAMS
    scripts/bug_navigator.py
    scripts/ibvs.py
+   scripts/ibvs_old.py
+   scripts/pose_controller_server.py
+   scripts/orientation_controller_server.py
    scripts/robot_state_pub.py
    scripts/kalman_localisation.py
    scripts/navigation.py

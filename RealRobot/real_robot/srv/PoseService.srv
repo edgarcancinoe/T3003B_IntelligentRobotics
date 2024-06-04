@@ -1,0 +1,4 @@
+# PoseService.srv
+geometry_msgs/Pose goal
+---
+bool finish

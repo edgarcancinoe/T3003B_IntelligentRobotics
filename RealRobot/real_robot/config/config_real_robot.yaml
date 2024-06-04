@@ -56,6 +56,10 @@ odometry_topic: '/map'
 wl_topic: '/wl'
 wr_topic: '/wr'
 camera_topic: '/feed/image_compressed'
+ibvs_activate_topic: '/ibvs_activate'
+bug_activate_topic: '/bug_activate'
+ibvs_done_topic: '/ibvs_done'
+unlock_topic: '/unlock'
 #########################
 
 ####### Node rates ######
@@ -96,8 +100,8 @@ pose_controller:
   r_tolerance: 0.1
   
 ibvs:
-  kp: 0.4
-  e_tolerance: 12
+  kp: 0.1
+  e_tolerance: 20
 
 orientation_controller:
   kp: 0.08

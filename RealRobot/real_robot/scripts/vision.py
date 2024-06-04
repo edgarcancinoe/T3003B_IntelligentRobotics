@@ -18,19 +18,19 @@ class ArucoDetector:
     def __init__(self, aruco_size, camera_topic, camera_matrix, distortion_coeffs, inertial_frame_id,
                  camera_frame_id, object_frame_id, 
                  target_id, target_detection_topic, 
-                 ibvs_activate_topic,
-                 goal_publisher_topic,
-                 done_vision_topic,
+                 #ibvs_activate_topic,
+                 #goal_publisher_topic,
+                 #done_vision_topic,
                  stream_video=True, verbose=True, 
                  target_samples_required: int = 20):
         
         #self.image_sub = rospy.Subscriber(camera_topic, CompressedImage, self._image_processing)
         self.reset_sub = rospy.Subscriber('/reset_vision', Bool, self._reset)
-        self.reached_goal_sub = rospy.Subscriber(goal_publisher_topic, Bool, self._reset)
+        #self.reached_goal_sub = rospy.Subscriber(goal_publisher_topic, Bool, self._reset)
         self.corner_pub = rospy.Publisher(target_detection_topic, Polygon, queue_size=10)
         #self.send_image = rospy.Publisher('/img_comp', CompressedImage, queue_size = 10)
         #self.active_ibvs_controller_pub = rospy.Publisher(ibvs_activate_topic, Bool, queue_size=10)
-        self.done_vision_pub = rospy.Publisher(done_vision_topic, Bool, queue_size=10)
+        #self.done_vision_pub = rospy.Publisher(done_vision_topic, Bool, queue_size=10)
 
         self.aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_250)
         self.parameters = aruco.DetectorParameters_create()
@@ -179,33 +179,20 @@ class ArucoDetector:
 if __name__ == '__main__':
     rospy.init_node('aruco_detector_server', anonymous=True)
     params = get_vision_params()
-    
-    inertial_frame_id = rospy.get_param('/inertial_frame')
-    camera_frame_id = rospy.get_param('/camera_frame')
-    object_frame_id = rospy.get_param('/object_frame')
-    camera_topic = rospy.get_param('/camera_topic')
-    target_id = rospy.get_param('/target_id')
-    target_detection_topic = rospy.get_param('/target_detection_topic')
-    ibvs_activate_topic = rospy.get_param('/ibvs_activate_topic')
-    goal_publisher_topic = rospy.get_param('/unlock_topic', 'unlock')
-    done_vision_topic = rospy.get_param('/done_vision_topic')
-    camera_matrix = np.array(rospy.get_param('/camera_matrix'))
-    distortion_coeffs = np.array(rospy.get_param('/distortion_coeffs'))
-    aruco_size = rospy.get_param('/aruco_size')
-
+ 
     #Init Class
-    ad = ArucoDetector(aruco_size= aruco_size,
-                    camera_topic=camera_topic, 
-                    camera_matrix=camera_matrix, 
-                    distortion_coeffs=distortion_coeffs, 
-                    inertial_frame_id=inertial_frame_id,
-                    camera_frame_id=camera_frame_id, 
-                    object_frame_id=object_frame_id, 
-                    target_id=target_id,
-                    target_detection_topic=target_detection_topic, 
-                    ibvs_activate_topic=ibvs_activate_topic,
-                    goal_publisher_topic=goal_publisher_topic,
-                    done_vision_topic=done_vision_topic,
+    ad = ArucoDetector(aruco_size=params['target_aruco_size'],
+                    camera_topic=params['camera_topic'], 
+                    camera_matrix=params['camera_matrix'], 
+                    distortion_coeffs=params['distortion_coeffs'], 
+                    inertial_frame_id=params['inertial_frame'],
+                    camera_frame_id=params['camera_frame'], 
+                    object_frame_id=params['object_frame'], 
+                    target_id=params['target_id'],
+                    target_detection_topic=params['target_detection_topic'], 
+                    #ibvs_activate_topic=['ibvs_activate_topic'],
+                    #goal_publisher_topic=['goal_publisher_topic'],
+                    #done_vision_topic=['done_vision_topic'],
                     stream_video=False)
     
     try:
