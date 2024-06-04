@@ -50,7 +50,7 @@ class Puzzlebot_Visual_Controller():
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         
-        rospy.sleep(7.0)  # Wait for tf2 to initialize
+        rospy.sleep(4.0)  # Wait for tf2 to initialize
 
         found = False
         while not found:

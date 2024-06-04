@@ -6,7 +6,7 @@ from real_robot.srv import GripperService, GripperServiceResponse
 
 
 def handle_gripper(req):
-    angle = 90.0 if req.data else -55.0
+    angle = 90.0 if req.data else -40.0
     servo_pub.publish(angle)
     return GripperServiceResponse(angle)
 

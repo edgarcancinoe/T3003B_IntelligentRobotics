@@ -15,9 +15,17 @@ import base64
 from real_robot_util.util import get_vision_params
 
 class ArucoDetector:
-    def __init__(self, aruco_size, camera_topic, camera_matrix, distortion_coeffs, inertial_frame_id,
+    def __init__(self, 
+                 target_aruco_id,
+                 target_aruco_size, 
+                 target_z_desired,
+                 station_aruco_id,
+                 station_aruco_size,
+                 station_z_desired,
+                 camera_topic, camera_matrix, distortion_coeffs, inertial_frame_id,
                  camera_frame_id, object_frame_id, 
-                 target_id, target_detection_topic, 
+                 target_detection_topic, 
+                 reset_vision_topic,
                  #ibvs_activate_topic,
                  #goal_publisher_topic,
                  #done_vision_topic,
@@ -25,7 +33,7 @@ class ArucoDetector:
                  target_samples_required: int = 20):
         
         #self.image_sub = rospy.Subscriber(camera_topic, CompressedImage, self._image_processing)
-        self.reset_sub = rospy.Subscriber('/reset_vision', Bool, self._reset)
+        self.reset_sub = rospy.Subscriber(reset_vision_topic, Bool, self._reset)
         #self.reached_goal_sub = rospy.Subscriber(goal_publisher_topic, Bool, self._reset)
         self.corner_pub = rospy.Publisher(target_detection_topic, Polygon, queue_size=10)
         self.send_image = rospy.Publisher(camera_topic, CompressedImage, queue_size = 10)
@@ -38,7 +46,15 @@ class ArucoDetector:
         self.stream_video = stream_video
         self.camera_matrix = camera_matrix
         self.distortion_coeffs = distortion_coeffs
-        self.aruco_size = aruco_size
+
+        self.target_aruco_id = target_aruco_id
+        self.target_aruco_size = target_aruco_size
+        self.target_z_desired = target_z_desired
+
+        self.station_aruco_id = station_aruco_id
+        self.station_aruco_size = station_aruco_size
+        self.station_z_desired = station_z_desired
+
         self.tf_broadcaster = tf2_ros.StaticTransformBroadcaster()
         self.tf_listener = tf.TransformListener()
 
@@ -46,7 +62,7 @@ class ArucoDetector:
         self.camera_frame_id = camera_frame_id
         self.object_frame_id = object_frame_id
 
-        self.target_id = target_id
+        self.target_id = self.target_aruco_id
         
         self.on_sight = []
         self.knowledge = {}
@@ -62,14 +78,14 @@ class ArucoDetector:
         buffer = tf2_ros.Buffer()
         timeout = rospy.Duration(20.0)
         tf_listener = tf2_ros.TransformListener(buffer)
-
+        start_time = rospy.Time.now()
         while not rospy.is_shutdown():
             try:
                 transform = buffer.lookup_transform(inertial_frame_id, camera_frame_id, rospy.Time(0), timeout)
                 break
             except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
                 if rospy.Time.now() - start_time > timeout:
-                    rospy.logwarn("Timeout while waiting for transform from {} to {}".format(source_frame, target_frame))
+                    rospy.logwarn("Timeout while waiting for transform from {} to {}".format(camera_frame_id, inertial_frame_id))
                     return None
                 rospy.sleep(0.05)
 
@@ -84,7 +100,9 @@ class ArucoDetector:
         rospy.Timer(rospy.Duration(3), self._verbose)
         self.camaraTimer = rospy.Timer(rospy.Duration(1/40), self._image_processing)
 
-    def _reset(self, _):
+    def _reset(self, msg):
+        # If msg.data == 1, target is target_id, else target is station_id
+        self.target_id = self.target_aruco_id if msg.data else self.station_aruco_id
         self.knowledge = {}
         self.on_sight = []
         self.target_positions = []
@@ -193,7 +211,12 @@ if __name__ == '__main__':
     params = get_vision_params()
  
     #Init Class
-    ad = ArucoDetector(aruco_size=params['target_aruco_size'],
+    ad = ArucoDetector(target_aruco_id=params['target_aruco_size'],
+                       target_aruco_size=params['target_aruco_size'],
+                       target_z_desired=params['target_z_desired'],
+                        station_aruco_id=params['station_aruco_id'],
+                        station_aruco_size=params['station_aruco_size'],
+                        station_z_desired=params['station_z_desired'],
                     camera_topic=params['camera_topic'], 
                     camera_matrix=params['camera_matrix'], 
                     distortion_coeffs=params['distortion_coeffs'], 
@@ -201,7 +224,8 @@ if __name__ == '__main__':
                     camera_frame_id=params['camera_frame'], 
                     object_frame_id=params['object_frame'], 
                     target_id=params['target_id'],
-                    target_detection_topic=params['target_detection_topic'], 
+                    target_detection_topic=params['target_detection_topic'],
+                    reset_vision_topic=params['reset_vision_topic'], 
                     #ibvs_activate_topic=['ibvs_activate_topic'],
                     #goal_publisher_topic=['goal_publisher_topic'],
                     #done_vision_topic=['done_vision_topic'],

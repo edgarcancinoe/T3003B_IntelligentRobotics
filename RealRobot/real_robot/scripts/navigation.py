@@ -24,6 +24,7 @@ class Navigator:
                         #pose_controller_topic: str,
                         #orientation_controller_activate_topic,
                         #orientation_controller_topic,
+                        reset_vision_topic: str,
                         cmd_vel_topic: str,
                         odom_topic: str,
                         ibvs_result_topic: str):
@@ -32,7 +33,7 @@ class Navigator:
         self.inertial_frame_id = inertial_frame_id
         self.object_frame_id = object_frame_id
 
-        #Open Gripper
+        # Open Gripper
 
         # Initialize the control publishers
         self.ibvs_commander = rospy.Publisher(ibvs_activate_topic, Bool, queue_size=10)
@@ -43,7 +44,9 @@ class Navigator:
         #self.pose_controller_publisher = rospy.Publisher(pose_controller_topic, Pose, queue_size=10)
         #self.orientation_controller_publisher = rospy.Publisher(orientation_controller_topic, Float32, queue_size=10)
         #self.orientation_controller_activate_publisher = rospy.Publisher(orientation_controller_activate_topic, Bool, queue_size=10)
-        self.reset_vision_pub = rospy.Publisher('/reset_vision', Bool, queue_size=10)
+        
+        # Reset vision publisher (Send true to aruco target and false to station target)
+        self.reset_vision_pub = rospy.Publisher(reset_vision_topic, Bool, queue_size=10)
         self.cmd_vel_publisher = rospy.Publisher(cmd_vel_topic, Twist, queue_size=10)
 
         # TF Listener
@@ -74,14 +77,21 @@ class Navigator:
             self.state = 'TARGET_DETECTED'
             self.busy = False
             self.target_found = True
-            
-
 
     def _ibvs_result_callback(self, msg):
         if self.state == 'TARGET_DETECTED':
             if msg.data:
                 self.state = 'TARGET_REACHED'
                 self.ibvs_commander.publish(Bool(False))
+                self.busy = False
+            else:
+                self.state = 'TARGET_LOST'
+                self.ibvs_commander.publish(Bool(False))
+                self.target_found = False
+                self.busy = False
+        elif self.state == 'TARGET_REACHED':
+            if msg.data:
+                self.state = 'READY_TO_DROP'
                 self.busy = False
             else:
                 self.state = 'TARGET_LOST'
@@ -179,41 +189,53 @@ class Navigator:
             self.ibvs_commander.publish(Bool(True))
 
         elif self.state == 'TARGET_REACHED':
+
             rospy.logwarn('Target reached. Closing gripper.')
             self.busy = True
             self.ibvs_commander.publish(Bool(False))
-            # Move for 4 seconds
+
+            # Move to grab box
             vel = Twist(linear=Vector3(0.1, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
             self.cmd_vel_publisher.publish(vel)
             rospy.sleep(1)
             vel = Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
             self.cmd_vel_publisher.publish(vel)
             rospy.sleep(1)
+
             # Close Gripper
             self.call_gripper_service(False)
             rospy.sleep(2)
+
+            # Go to station view point
             point = Point(2.40, 1.4, 0.0)
             rospy.logwarn(f'Gripper closed. Going to point {point}...')
             rospy.sleep(2)
-            # Letter B (2.88,1.62)
             self.call_bug_service(point,2)
             self.call_orientation_service(0)
-            point = Point(2.50, 1.62, 0.0)
-            self.call_bug_service(point,2)
             rospy.sleep(1)
+            rospy.logwarn('Reached station initial point. Activating IBVS...')
+            self.reset_vision_pub(Bool(False))
+            self.ibvs_commander.publish(Bool(True))
+        
+        elif self.state == 'READY TO DROP':
+            # Open gripper
             self.call_gripper_service(True)
+            rospy.logwarn('Box delivered. Reversing...')
             
+            # Go in reverse
             vel = Twist(linear=Vector3(-0.1, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
             self.cmd_vel_publisher.publish(vel)
             rospy.sleep(1)
             vel = Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
             self.cmd_vel_publisher.publish(vel)
             rospy.sleep(1)
+
+            rospy.logwarn('Going to initial point...')
+            # Go to initial point
             point = Point(0.01, 0.01, 0.0)
             self.call_bug_service(point,2)
             rospy.sleep(1)
             self.call_orientation_service(0)
-            # self.bug_commander.publish(Bool(True))
 
         elif self.state == 'TARGET_LOST':
             rospy.logwarn('Target lost. Searching for target...')
@@ -283,6 +305,7 @@ if __name__ == '__main__':
     ibvs_activate_topic = params['ibvs_activate_topic']
     bug_activate_topic = params['bug_activate_topic']
     ibvs_result_topic = params['ibvs_done_topic']
+    reset_vision_topic = params['reset_vision_topic']
     cmd_vel_topic = params['commands_topic']
     odometry_topic = params['odometry_topic']
 
@@ -302,6 +325,7 @@ if __name__ == '__main__':
                             #pose_controller_topic,
                             #orientation_controller_activate_topic,
                             #orientation_controller_topic,
+                            reset_vision_topic,
                             cmd_vel_topic,
                             odometry_topic,
                             ibvs_result_topic)

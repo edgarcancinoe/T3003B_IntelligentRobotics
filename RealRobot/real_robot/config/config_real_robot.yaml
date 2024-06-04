@@ -60,6 +60,7 @@ ibvs_activate_topic: '/ibvs_activate'
 bug_activate_topic: '/bug_activate'
 ibvs_done_topic: '/ibvs_done'
 unlock_topic: '/unlock'
+reset_vision_topic: '/reset_vision'
 #########################
 
 ####### Node rates ######
