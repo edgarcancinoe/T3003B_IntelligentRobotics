@@ -67,8 +67,11 @@ class Navigator:
         # Set timer
         rospy.Timer(rospy.Duration(1.0/navigator_rate), self.run)
 
-    def _target_detection_callback(self, _):
+    def _target_detection_callback(self, corners):
+        if len(corners.points) == 0:
+            return
         if self.state == 'NO_TARGET_DETECTED' or self.state == 'TARGET LOST':
+            print(corners)
             self.state = 'TARGET_DETECTED'
             self.busy = False
             self.target_found = True
@@ -139,9 +142,8 @@ class Navigator:
         
             try:
                 orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
-                response = orientation_controller(target_orientations[idx])
+                response = orientation_controller(Float32(target_orientations[idx]))
                 rospy.loginfo(f"Orientation Controler Finish {response.finish}")
-                self.target_found = response.finish
             except rospy.ServiceException as e:
                 rospy.logerr(f"Service call failed: {e}")
                 return False
@@ -151,6 +153,7 @@ class Navigator:
                 rospy.loginfo('Orientation controller finished')
 
             idx = (idx + 1) % 2
+            rospy.sleep(1)
 
         return self.target_found
     
