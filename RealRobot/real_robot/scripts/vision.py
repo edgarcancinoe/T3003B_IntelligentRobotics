@@ -63,6 +63,7 @@ class ArucoDetector:
         self.object_frame_id = object_frame_id
 
         self.target_id = self.target_aruco_id
+        self.aruco_size = self.target_aruco_size
         
         self.on_sight = []
         self.knowledge = {}
@@ -103,6 +104,7 @@ class ArucoDetector:
     def _reset(self, msg):
         # If msg.data == 1, target is target_id, else target is station_id
         self.target_id = self.target_aruco_id if msg.data else self.station_aruco_id
+        self.aruco_size = self.target_aruco_size if msg.data else self.station_aruco_size
         self.knowledge = {}
         self.on_sight = []
         self.target_positions = []
@@ -139,12 +141,12 @@ class ArucoDetector:
         corners, ids, _ = aruco.detectMarkers(gray_image, self.aruco_dict, parameters=self.parameters,
                                               cameraMatrix=self.camera_matrix, distCoeff=self.distortion_coeffs)
 
-        if ids == None:
+        if not(ids is not None):
             self.corner_pub.publish(Polygon()) # Send empty 
            
         else:
             ids = ids.flatten() 
-            
+
             # Objects detected
             for i in range(len(ids)):
                 # Only send information regarding the target marker
@@ -211,7 +213,7 @@ if __name__ == '__main__':
     params = get_vision_params()
  
     #Init Class
-    ad = ArucoDetector(target_aruco_id=params['target_aruco_size'],
+    ad = ArucoDetector(target_aruco_id=params['target_aruco_id'],
                        target_aruco_size=params['target_aruco_size'],
                        target_z_desired=params['target_z_desired'],
                         station_aruco_id=params['station_aruco_id'],
@@ -223,8 +225,7 @@ if __name__ == '__main__':
                     inertial_frame_id=params['inertial_frame'],
                     camera_frame_id=params['camera_frame'], 
                     object_frame_id=params['object_frame'], 
-                    target_id=params['target_id'],
-                    target_detection_topic=params['target_detection_topic'],
+                        target_detection_topic=params['target_detection_topic'],
                     reset_vision_topic=params['reset_vision_topic'], 
                     #ibvs_activate_topic=['ibvs_activate_topic'],
                     #goal_publisher_topic=['goal_publisher_topic'],

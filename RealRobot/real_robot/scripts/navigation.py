@@ -33,11 +33,8 @@ class Navigator:
         self.inertial_frame_id = inertial_frame_id
         self.object_frame_id = object_frame_id
 
-        # Open Gripper
-
         # Initialize the control publishers
         self.ibvs_commander = rospy.Publisher(ibvs_activate_topic, Bool, queue_size=10)
-        self.call_gripper_service(True)
         self.bug_commander = rospy.Publisher(bug_activate_topic, Bool, queue_size=10)
 
         #self.pose_controller_activate_publisher = rospy.Publisher(pose_controller_activate_topic, Bool, queue_size=10)
@@ -67,16 +64,19 @@ class Navigator:
         rospy.Subscriber(target_detection_topic, Polygon, self._target_detection_callback)
         rospy.Subscriber(ibvs_result_topic, Bool, self._ibvs_result_callback)
         rospy.Subscriber(odom_topic, Odometry, self._odom_callback)
+        rospy.sleep(2)
+        self.call_gripper_service(True)
         # Set timer
         rospy.Timer(rospy.Duration(1.0/navigator_rate), self.run)
-
+        
     def _target_detection_callback(self, corners):
         if len(corners.points) == 0:
             return
-        if self.state == 'NO_TARGET_DETECTED' or self.state == 'TARGET_LOST':
+        if self.state == 'NO_TARGET_DETECTED' or self.state == 'TARGET_LOST' or self.state == 'READY_TO_DROP':
             self.state = 'TARGET_DETECTED'
             self.busy = False
             self.target_found = True
+            rospy.logwarn("TARGET FOUND")
 
     def _ibvs_result_callback(self, msg):
         if self.state == 'TARGET_DETECTED':
@@ -158,11 +158,11 @@ class Navigator:
         current_yaw = (self._quat2yaw(self.s.orientation) + 2*np.pi) % (2*np.pi) # Ensure range [0, 2*pi]
 
         # Search to left side
-        target_orientations = [(current_yaw + np.radians(8)) % (2*np.pi), (current_yaw - np.radians(8)) % (2*np.pi)]
+        target_orientations = [(current_yaw + np.radians(8)) % (2*np.pi), (current_yaw - np.radians(12)) % (2*np.pi)]
         idx = 0
         rospy.logwarn('Searching for visual target...')
         while not self.target_found:
-            rospy.sleep(0.05)
+            rospy.sleep(0.5)
         
             self.call_orientation_service(target_orientations[idx])
 
@@ -207,17 +207,38 @@ class Navigator:
             rospy.sleep(2)
 
             # Go to station view point
-            point = Point(2.40, 1.4, 0.0)
+            point = Point(2.36, 1.4, 0.0)
             rospy.logwarn(f'Gripper closed. Going to point {point}...')
-            rospy.sleep(2)
+
             self.call_bug_service(point,2)
-            self.call_orientation_service(0)
+            self.call_orientation_service(-.1)
+            rospy.sleep(2)
+
+            # Open gripper
+            self.call_gripper_service(True)
+            rospy.logwarn('Box delivered. Reversing...')
+            
+            # Go in reverse
+            vel = Twist(linear=Vector3(-0.1, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+            self.cmd_vel_publisher.publish(vel)
             rospy.sleep(1)
-            rospy.logwarn('Reached station initial point. Activating IBVS...')
-            self.reset_vision_pub(Bool(False))
-            self.ibvs_commander.publish(Bool(True))
+            vel = Twist(linear=Vector3(0.0, 0.0, 0.0), angular=Vector3(0.0, 0.0, 0.0))
+            self.cmd_vel_publisher.publish(vel)
+            rospy.sleep(1)
+
+            rospy.logwarn('Going to initial point...')
+            # Go to initial point
+            point = Point(0.01, 0.01, 0.0)
+            self.call_bug_service(point,2)
+            rospy.sleep(1)
+            self.call_orientation_service(0)
+
+
+            # rospy.logwarn('Reached station initial point. Activating IBVS...')
+            # self.reset_vision_pub.publish(Bool(False))
+            # self.ibvs_commander.publish(Bool(True))
         
-        elif self.state == 'READY TO DROP':
+        elif self.state == 'READY_TO_DROP':
             # Open gripper
             self.call_gripper_service(True)
             rospy.logwarn('Box delivered. Reversing...')

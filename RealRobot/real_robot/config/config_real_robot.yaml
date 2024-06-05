@@ -23,13 +23,13 @@ target_corner_locations: [[221., 441.],
                           [350., 279.],
                           [349., 429.]]
 
-station_id: 1
+station_id: 2
 station_aruco_size: 0.04
-station_z_desired: 0.126
-station_corner_locations: [[202.0, 461.0], 
-                            [193.0, 446.0], 
-                            [371.0, 242.0], 
-                            [369., 450.]]
+station_z_desired: 0.19
+station_corner_locations: [[221., 441.],
+                          [213., 287.],
+                          [350., 279.],
+                          [349., 429.]]
 #########################
 
 ############### FILES #################
@@ -89,16 +89,16 @@ map_localisation:
   ransac_d_threshold: 0.01
   min_ransac_inliers: 50
   search_range: 60
-  landmark_distance_threshold: 0.65
+  landmark_distance_threshold: 0.25
 
 pose_controller:
   k1: 0.08
   k2: 0.6
   beta: 0.9
   lambda_: 1.15
-  v_max: 0.2 # Will use min(/max_v, /pose_controller/v_max)
+  v_max: 0.15 # Will use min(/max_v, /pose_controller/v_max)
   
-  r_tolerance: 0.1
+  r_tolerance: 0.2
   
 ibvs:
   kp: 0.035
@@ -112,7 +112,7 @@ orientation_controller:
 bug_navigation:
   # Frontal tolerance should be grater than horizontal tolerance
   # and horizontal tolerance should be grater than the robot's side length
-  frontal_tolerance: 0.28
+  frontal_tolerance: 0.35
   horizontal_tolerance: 0.25
   
   lidar_resolution: 1147 # 360, 720, 1080
@@ -121,7 +121,7 @@ bug_navigation:
   w: 0.1
 
   bug2:
-    min_d_hitpoint: 0.04
+    min_d_hitpoint: 0.07
 
 
 #######################################

@@ -423,9 +423,9 @@ class Navigator:
         #print("Llamado a Orientation")
         #print(goal)
         rospy.wait_for_service('orientation_controller')
-        print("Dejo de esperar")
+        #print("Dejo de esperar")
         try:
-            print("Llamado a Orientation")
+            #print("Llamado a Orientation")
             orientation_controller = rospy.ServiceProxy('orientation_controller', OrientationService)
             response = orientation_controller(goal)
             rospy.loginfo(f"Orientation Controler Finish {response.finish}")

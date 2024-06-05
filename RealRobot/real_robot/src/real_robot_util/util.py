@@ -23,7 +23,8 @@ def get_global_params():
         'navigation_rate': rospy.get_param('/navigation_rate'),
         'starting_state': rospy.get_param('/starting_state'),
         'unlock': rospy.get_param('/unlock_topic'),
-        'ibvs_done_topic': rospy.get_param('/ibvs_done_topic')
+        'ibvs_done_topic': rospy.get_param('/ibvs_done_topic'),
+        'reset_vision_topic': rospy.get_param('/reset_vision_topic'),
     }
 
     return global_params
@@ -137,11 +138,11 @@ def get_uncertainty_localisation_params():
 
 def get_vision_params():
     vision_params = {
-        'target_id': rospy.get_param('/target_id'),
+        'target_aruco_id': rospy.get_param('/target_id'),
         'target_aruco_size': rospy.get_param('/target_aruco_size'),
         'target_z_desired': rospy.get_param('/target_z_desired'),
         'target_corner_locations': np.array([rospy.get_param('/target_corner_locations')]),
-        'station_id': rospy.get_param('/station_id'),
+        'station_aruco_id': rospy.get_param('/station_id'),
         'station_aruco_size': rospy.get_param('/station_aruco_size'),
         'station_z_desired': rospy.get_param('/station_z_desired'),
         'station_corner_locations': np.array([rospy.get_param('/station_corner_locations')]),
