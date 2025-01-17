@@ -18,8 +18,9 @@ Navigation algorithms:
 - Smooth control law for graceful motion of differential wheeled mobile robots (Park, J., & Kuipers, B. (2011)) for A to B coordinate navigation.
 - Bug0 and Bug2 reactive algorithms for collision avoidance. 
 
-<a href="https://www.youtube.com/watch?v=1AvmbjeHvxk">
-  <img src="https://img.youtube.com/vi/1AvmbjeHvxk/maxresdefault.jpg" width="600"  alt="YouTube Video">
+<a href="https://www.youtube.com/watch?v=1AvmbjeHvxk" target="_blank">
+  <img src="https://img.youtube.com/vi/1AvmbjeHvxk/maxresdefault.jpg" alt="YouTube Video" style="position: relative; display: inline-block;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/YouTube_play_buttom_icon_%282013-2017%29.svg" alt="Play Button" style="width: 80px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;">
 </a>
 
 ---
