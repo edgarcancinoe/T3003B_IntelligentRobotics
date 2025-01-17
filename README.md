@@ -30,6 +30,10 @@ One landmark, no obstacles:
 
 [![YouTube Video](https://img.youtube.com/vi/ifPmzuSDDSw/0.jpg)](https://www.youtube.com/watch?v=ifPmzuSDDSw)
 
+<a href="https://www.youtube.com/watch?v=ifPmzuSDDSw">
+  <img src="https://img.youtube.com/vi/ifPmzuSDDSw/0.jpg" width="400" alt="YouTube Video">
+</a>
+
 Four landmarks and obstacles:
 
 [![YouTube Video](https://img.youtube.com/vi/r2-SB52dr-w/0.jpg)](https://www.youtube.com/watch?v=r2-SB52dr-w)
