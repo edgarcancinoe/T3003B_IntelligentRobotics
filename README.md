@@ -10,7 +10,7 @@ Robot specifications:
 - ROS1 implementation.
 - 1D profile lidar sensor used for object detection.
 
-Localisation:
+Localization:
 - Encoder-based odometry and sensor fusion using landmark-based position estimates and Extended Kalman Filter (EKF) correction.
 
 Navigation algorithms:
@@ -27,7 +27,7 @@ Navigation algorithms:
 
 ---
 
-### Localisation: Odometry, uncertainty propagation and extended kalman filter corrections
+### Localization: Odometry, uncertainty propagation and extended kalman filter corrections
 
 Odometry from wheel encoders was fused with landmark detection using an Extended Kalman Filter (EKF) to provide continuous localization and position correction by integrating motion predictions with measurement updates.
 
