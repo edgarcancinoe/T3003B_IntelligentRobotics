@@ -24,12 +24,14 @@ Navigation algorithms:
 
 Odometry from wheel encoders was fused with landmark detection using an Extended Kalman Filter (EKF) to provide continuous localization and position correction by integrating motion predictions with measurement updates.
 
-Watch simulation results on youtube:
+**Watch simulation results on youtube:**
 
 One landmark, no obstacles:
+
 [![YouTube Video](https://img.youtube.com/vi/ifPmzuSDDSw/0.jpg)](https://www.youtube.com/watch?v=ifPmzuSDDSw)
 
 Four landmarks and obstacles:
+
 [![YouTube Video](https://img.youtube.com/vi/r2-SB52dr-w/0.jpg)](https://www.youtube.com/watch?v=r2-SB52dr-w)
 
 ---
