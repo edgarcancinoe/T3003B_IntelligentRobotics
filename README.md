@@ -3,7 +3,47 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
 
-### Vision: An Image Based Visual Control Law for a Differential Drive Mobile Robot
+### Final Implementation
+
+Robot specifications:
+- Puzzlebot robot with Nvidia Jetson Nano.
+- ROS1 implementation.
+- 1D profile lidar sensor used for object detection.
+
+Localisation:
+- Encoder-based odometry and sensor fusion using landmark-based position estimates and Extended Kalman Filter (EKF) correction.
+
+Navigation algorithms:
+- Image-Based Visual Control Law for a Differential Drive Mobile Robot (Siradjuddin, I., Siradjuddin, I. A., & Adhisuwignjo, S. (2015)) to move to identified aruco blocks.
+- Smooth control law for graceful motion of differential wheeled mobile robots (Park, J., & Kuipers, B. (2011)) for A to B coordinate navigation.
+- Bug0 and Bug2 reactive algorithms for collision avoidance. 
+
+---
+
+### Localisation: Odometry, uncertainty propagation and extended kalman filter corrections
+
+Odometry from wheel encoders was fused with landmark detection using an Extended Kalman Filter (EKF) to provide continuous localization and position correction by integrating motion predictions with measurement updates.
+
+Watch simulation results on youtube:
+
+One landmark, no obstacles:
+[![YouTube Video](https://img.youtube.com/vi/ifPmzuSDDSw/0.jpg)](https://www.youtube.com/watch?v=ifPmzuSDDSw)
+
+Four landmarks and obstacles:
+[![YouTube Video](https://img.youtube.com/vi/r2-SB52dr-w/0.jpg)](https://www.youtube.com/watch?v=r2-SB52dr-w)
+
+---
+
+### Navigation: A smooth control law for graceful motion of differential wheeled mobile robots
+
+Implementation of the smooth control law for graceful motion of differential wheeled mobile robots, as described in ‘A Smooth Control Law for Graceful Motion of Differential Wheeled Mobile Robots in 2D Environment’ by Park and Kuipers
+
+##### Reference
+Park, J., & Kuipers, B. (2011). *A smooth control law for graceful motion of differential wheeled mobile robots in 2D environment*. Proceedings - IEEE International Conference on Robotics and Automation. [DOI: 10.1109/ICRA.2011.5980167](https://doi.org/10.1109/ICRA.2011.5980167)
+
+---
+
+### Vision & Control: An Image Based Visual Control Law for a Differential Drive Mobile Robot
 Implementation of the Image-Based Visual Servoing (IBVS) control law, as proposed in ‘An Image Based Visual Control Law for a Differential Drive Mobile Robot’ by Siradjuddin et al., utilizing a set of reference image points to map visual errors in the image space to robot actuation.”
 
 Watch simulation results on youtube:
@@ -12,7 +52,7 @@ Watch simulation results on youtube:
 
 ##### Reference
 
-Siradjuddin, I., Siradjuddin, I. A., & Adhisuwignjo, S. (2015). An Image Based Visual Control Law for a Differential Drive Mobile Robot. *International Journal of Mechanical & Mechatronics Engineering*, 15(6). [Read the paper here](link-to-paper)
+Siradjuddin, I., Siradjuddin, I. A., & Adhisuwignjo, S. (2015). An Image Based Visual Control Law for a Differential Drive Mobile Robot. *International Journal of Mechanical & Mechatronics Engineering*, 15(6).
 
 ---
 ### Week 2: Control and Odometry
