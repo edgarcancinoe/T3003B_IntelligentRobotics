@@ -18,7 +18,7 @@ Navigation algorithms:
 - Smooth control law for graceful motion of differential wheeled mobile robots (Park, J., & Kuipers, B. (2011)) for A to B coordinate navigation.
 - Bug0 and Bug2 reactive algorithms for collision avoidance. 
 
-##### [Watch on YouTube](https://www.youtube.com/watch?v=ifPmzuSDDSw)
+#### [Watch on YouTube](https://www.youtube.com/watch?v=ifPmzuSDDSw)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=1AvmbjeHvxk">
     <img src="https://img.youtube.com/vi/1AvmbjeHvxk/maxresdefault.jpg" width="600" alt="YouTube Video">
@@ -33,16 +33,14 @@ Odometry from wheel encoders was fused with landmark detection using an Extended
 
 **Watch simulation results on youtube:**
 
-One landmark, no obstacles:
-#### [Watch on YouTube](https://www.youtube.com/watch?v=r2-SB52dr-w)
+#### [One landmark, no obstacles](https://www.youtube.com/watch?v=r2-SB52dr-w)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=ifPmzuSDDSw">
     <img src="https://img.youtube.com/vi/ifPmzuSDDSw/maxresdefault.jpg" width="600" alt="YouTube Video">
   </a>
 </div>
 
-Four landmarks and obstacles:
-
+#### [Four landmarks and obstacles](https://www.youtube.com/watch?v=0MXhxT5HQDc)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=r2-SB52dr-w">
     <img src="https://img.youtube.com/vi/r2-SB52dr-w/maxresdefault.jpg" width="600" alt="YouTube Video">
@@ -62,8 +60,7 @@ Park, J., & Kuipers, B. (2011). *A smooth control law for graceful motion of dif
 ### Vision & Control: An Image Based Visual Control Law for a Differential Drive Mobile Robot
 Implementation of the Image-Based Visual Servoing (IBVS) control law, as proposed in ‘An Image Based Visual Control Law for a Differential Drive Mobile Robot’ by Siradjuddin et al., utilizing a set of reference image points to map visual errors in the image space to robot actuation.”
 
-Watch simulation results on youtube:
-
+#### [Watch gazebo simulation in youtube](https://www.youtube.com/watch?v=1AvmbjeHvxk)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=0MXhxT5HQDc">
     <img src="https://img.youtube.com/vi/0MXhxT5HQDc/maxresdefault.jpg" width="600" alt="YouTube Video">
