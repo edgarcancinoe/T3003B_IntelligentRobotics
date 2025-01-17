@@ -34,16 +34,19 @@ Odometry from wheel encoders was fused with landmark detection using an Extended
 
 One landmark, no obstacles:
 
-[![YouTube Video](https://img.youtube.com/vi/ifPmzuSDDSw/0.jpg)](https://www.youtube.com/watch?v=ifPmzuSDDSw)
-
-<a href="https://www.youtube.com/watch?v=ifPmzuSDDSw">
-  <img src="https://img.youtube.com/vi/ifPmzuSDDSw/0.jpg" width="800" alt="YouTube Video">
-</a>
+<div style="text-align: center;">
+  <a href="https://www.youtube.com/watch?v=ifPmzuSDDSw">
+    <img src="https://img.youtube.com/vi/ifPmzuSDDSw/maxresdefault.jpg" width="600" alt="YouTube Video">
+  </a>
+</div>
 
 Four landmarks and obstacles:
 
-[![YouTube Video](https://img.youtube.com/vi/r2-SB52dr-w/0.jpg)](https://www.youtube.com/watch?v=r2-SB52dr-w)
-
+<div style="text-align: center;">
+  <a href="https://www.youtube.com/watch?v=r2-SB52dr-w">
+    <img src="https://img.youtube.com/vi/r2-SB52dr-w/maxresdefault.jpg" width="600" alt="YouTube Video">
+  </a>
+</div>
 ---
 
 ### Navigation: A smooth control law for graceful motion of differential wheeled mobile robots
@@ -60,7 +63,11 @@ Implementation of the Image-Based Visual Servoing (IBVS) control law, as propose
 
 Watch simulation results on youtube:
 
-[![YouTube Video](https://img.youtube.com/vi/0MXhxT5HQDc/0.jpg)](https://www.youtube.com/watch?v=0MXhxT5HQDc)
+<div style="text-align: center;">
+  <a href="https://www.youtube.com/watch?v=0MXhxT5HQDc">
+    <img src="https://img.youtube.com/vi/0MXhxT5HQDc/maxresdefault.jpg" width="600" alt="YouTube Video">
+  </a>
+</div>
 
 ##### Reference
 
