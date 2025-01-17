@@ -46,6 +46,7 @@ Odometry from wheel encoders was fused with landmark detection using an Extended
     <img src="https://img.youtube.com/vi/r2-SB52dr-w/maxresdefault.jpg" width="600" alt="YouTube Video">
   </a>
 </div>
+
 ---
 
 ### Navigation: A smooth control law for graceful motion of differential wheeled mobile robots
