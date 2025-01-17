@@ -5,18 +5,18 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 
 ### Final Implementation
 
-Robot specifications:
+**Robot specifications:**
 - Puzzlebot robot with Nvidia Jetson Nano.
 - ROS1 implementation.
 - 1D profile lidar sensor used for object detection.
 
-Localization:
+**Localization:**
 - Encoder-based odometry and sensor fusion using landmark-based position estimates and Extended Kalman Filter (EKF) correction.
 
-Navigation algorithms:
-- Image-Based Visual Control Law for a Differential Drive Mobile Robot (Siradjuddin, I., Siradjuddin, I. A., & Adhisuwignjo, S. (2015)) to move to identified aruco blocks.
-- Smooth control law for graceful motion of differential wheeled mobile robots (Park, J., & Kuipers, B. (2011)) for A to B coordinate navigation.
-- Bug0 and Bug2 reactive algorithms for collision avoidance. 
+**Navigation algorithms:**
+- *Image-Based Visual Control Law for a Differential Drive Mobile Robot* (Siradjuddin, I., Siradjuddin, I. A., & Adhisuwignjo, S. (2015)) to move to identified aruco blocks.
+- *Smooth control law for graceful motion of differential wheeled mobile robots* (Park, J., & Kuipers, B. (2011)) for A to B coordinate navigation.
+- *Bug0* and _Bug2_ reactive algorithms for collision avoidance. 
 
 #### [Watch on YouTube](https://www.youtube.com/watch?v=ifPmzuSDDSw)
 <div style="text-align: center;">
