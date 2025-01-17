@@ -2,7 +2,7 @@
 Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
-### Week 2: Challenge
+### Week 2: Control and Odometry
 Control, odometry, and simulation in RViz of the PuzzleBot movement while following a waypoint-defined trajectory, based on the robot's kinematic state representation.
 
 - Simulation of the robot's dynamics under its kinematic model.
@@ -50,9 +50,7 @@ Rviz simulation |Control Plots
 
 ---
 
-### Week 1: Challenge
-
-State-space representation of the dynamics of a pendulum system:
+### Week 1: State-space representation of the dynamics of a pendulum system:
 ```math
 J \ddot{q} + k\, \dot{q} + mga\cos{(q)} = \tau
 ```
