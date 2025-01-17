@@ -2,6 +2,13 @@
 Class T3003B: Integration of Robotics and Intelligent Systems
 
 ---
+
+### Vision: An Image Based Visual Control Law for a Differential Drive Mobile Robot
+Implementation of the Image-Based Visual Servoing (IBVS) control law, as proposed in ‘An Image Based Visual Control Law for a Differential Drive Mobile Robot’ by Siradjuddin et al., utilizing a set of reference image points to map visual errors in the image space to robot actuation.”
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/0MXhxT5HQDc?si=bx86aSjc3dad9TyB" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+---
 ### Week 2: Control and Odometry
 Control, odometry, and simulation in RViz of the PuzzleBot movement while following a waypoint-defined trajectory, based on the robot's kinematic state representation.
 
