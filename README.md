@@ -18,7 +18,7 @@ Class T3003B: Integration of Robotics and Intelligent Systems
 - *Smooth control law for graceful motion of differential wheeled mobile robots* (Park, J., & Kuipers, B. (2011)) for A to B coordinate navigation.
 - *Bug0* and _Bug2_ reactive algorithms for collision avoidance. 
 
-#### [Watch on YouTube](https://www.youtube.com/watch?v=ifPmzuSDDSw)
+#### [Watch on YouTube](https://www.youtube.com/watch?v=1AvmbjeHvxk)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=1AvmbjeHvxk">
     <img src="https://img.youtube.com/vi/1AvmbjeHvxk/maxresdefault.jpg" width="600" alt="YouTube Video">
