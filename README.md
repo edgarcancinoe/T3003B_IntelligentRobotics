@@ -33,14 +33,14 @@ Odometry from wheel encoders was fused with landmark detection using an Extended
 
 **Watch simulation results on youtube:**
 
-#### [One landmark, no obstacles](https://www.youtube.com/watch?v=r2-SB52dr-w)
+#### [One landmark, no obstacles](https://youtu.be/ifPmzuSDDSw?si=qa23fwaXM546sU3S)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=ifPmzuSDDSw">
     <img src="https://img.youtube.com/vi/ifPmzuSDDSw/maxresdefault.jpg" width="600" alt="YouTube Video">
   </a>
 </div>
 
-#### [Four landmarks and obstacles](https://www.youtube.com/watch?v=0MXhxT5HQDc)
+#### [Four landmarks and obstacles](https://www.youtube.com/watch?v=r2-SB52dr-w)
 <div style="text-align: center;">
   <a href="https://www.youtube.com/watch?v=r2-SB52dr-w">
     <img src="https://img.youtube.com/vi/r2-SB52dr-w/maxresdefault.jpg" width="600" alt="YouTube Video">
