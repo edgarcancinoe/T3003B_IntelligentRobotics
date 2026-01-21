@@ -93,7 +93,6 @@ class Navigator:
             The slices are defined by the angles theta_1 and theta_2, and the offset  (degrees) is used to shift the slices if needed.
         """
 
-        
         # Lidar readings start at robots back so we need to add an offset to the angles
         offset = int(offset // self.angle_step)
 
@@ -355,7 +354,6 @@ class Navigator:
 
                         rospy.logwarn('Collision detected. Switching to FollowWall state')
                         self.state = 'FollowWall'
-                        continue
                     
                 elif self.state == 'FollowWall':
                     # Follow wall until the goal is reached
@@ -376,7 +374,7 @@ class Navigator:
                         self.state = 'MovingTowardsGoal'
                         self._activate_pose_controller()
                         self._set_goal_pose(self.final_goal)
-                        continue
+                        return False
         else:
             raise ValueError('No goal set')
     
