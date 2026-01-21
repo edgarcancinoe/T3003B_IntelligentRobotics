@@ -9,8 +9,6 @@ import random
 import yaml
 import tf.transformations as tft
 from visualization_msgs.msg import Marker
-# import matplotlib.pyplot as plt
-# import matplotlib.animation as animation
 
 class MapLocalisation:
     def __init__(self, scan_topic, map_path, odom_topic, lidar_resolution, lidar_offset, inertial_frame_name, landmark_distance_threshold, 
@@ -70,18 +68,6 @@ class MapLocalisation:
         self.marker_template.color.b = 0.0
         self.marker_template.color.a = 1.0
         self.marker_template.lifetime = rospy.Duration(1)
-
-        # self.fig, self.ax = plt.subplots()
-        # self.scan_plot, = self.ax.plot([], [], 'bo', markersize=2, label='Scan Plot (Inertial)')
-        # self.robot_scan_plot, = self.ax.plot([], [], 'go', markersize=2, label='Scan Plot (Robot Frame)')
-        # self.line_plots = []
-        # self.line_plots = []
-        # self.corner_plots = []
-        # self.ax.set_xlim(-10, 10)
-        # self.ax.set_ylim(-10, 10)
-        # self.ax.legend(loc='upper left', markerscale=5)
-        # self.ani = animation.FuncAnimation(self.fig, self.update_plot, interval=50)
-        # plt.show()
 
     def load_map(self, map_path):
         """
@@ -146,14 +132,11 @@ class MapLocalisation:
             
             # Yaw orientation to the landmark from the robots current position
             orientation_to_landmark_inertial = np.mod(np.arctan2(e_y, e_x) + 2*np.pi, 2*np.pi)
-            # print() 
-            # print('Orientation to landmark inertial: ', orientation_to_landmark_inertial)
             angle_difference = np.mod(orientation_to_landmark_inertial - robot_yaw + 2*np.pi, 2*np.pi)
-            # print('Angle difference: ', angle_difference)
             # Offset to account for the lidar offset
             angle_difference = np.mod(angle_difference + np.radians(90), 2*np.pi)
             angular_positions.append(angle_difference)
-        # print('Robot yaw: ', robot_yaw, 'Angular positions: ', angular_positions)
+
         return angular_positions
     
     def get_landmark_expected_scan_ranges_indexes(self, robot_position, robot_yaw): 
@@ -247,9 +230,6 @@ class MapLocalisation:
         angular_ranges = self.get_landmark_expected_scan_ranges_indexes(robot_position, robot_yaw)
 
         # To plot
-        # self.lines = np.empty((0, 2))
-        # self.points = np.empty((0, 2))
-        # self.points_robot_frame = np.empty((0, 2))
         self.located_landmarks = np.empty((0, 2))
         detected_landmarks = PoseArray()
         for i, (landmark, angular_range) in enumerate(zip(self.landmarks, angular_ranges)):
@@ -265,23 +245,14 @@ class MapLocalisation:
                                                       distance_threshold = self.ransac_d_threshold, 
                                                       min_inliers = self.min_ransac_inliers, 
                                                       max_n_lines = self.max_n_lines)
-            
-            # if self.visualize:
-            #     self.lines = np.concatenate((self.lines, lines))
-            #     self.points = np.concatenate((self.points, points))
-            #     self.points_robot_frame = np.concatenate((self.points_robot_frame, points_robot_frame))
 
             if len(lines) < 2:
-                # rospy.logwarn(f'Failed to detect 2 lines for {i}')
                 continue
 
             candidate_landmark = self.get_lines_intersection(lines[0], lines[1])
 
             distance_from_expected_landmark_position = np.linalg.norm(np.array(landmark) - candidate_landmark)
 
-            # print(f'Distance from expected landmark position: {np.round(distance_from_expected_landmark_position,3)}')
-            # print(f'Landmark {i} detected at position {candidate_landmark}')
-            # print(f'Landmark {i} expected at position {landmark}')
             if abs(distance_from_expected_landmark_position) < self.landmark_distance_threshold:
                 # print(f'Landmark {i} detected at position {candidate_landmark}')
                 self.located_landmarks = np.concatenate((self.located_landmarks, candidate_landmark.reshape(1, 2)))
@@ -289,9 +260,6 @@ class MapLocalisation:
                                  orientation=Quaternion(x=0.0,y=0.0,z=0.0,w=1.0))
                 detected_landmarks.poses.append(pose)
                 pass
-            # else:
-                # rospy.logwarn(f'Landmark {i} not detected')
-                # pass
         
         # Send located landmarks
         self.landmark_detection_publisher.publish(detected_landmarks)
@@ -305,38 +273,11 @@ class MapLocalisation:
             self.marker_template.pose.position.y = landmark[1]
             self.landmark_visualization_publisher.publish(self.marker_template)
 
-    # def update_plot(self, _):
-    #     if hasattr(self, 'points'):
-    #         self.scan_plot.set_data(self.points[:, 0], self.points[:, 1])
-    #         self.robot_scan_plot.set_data(self.points_robot_frame[:, 0], self.points_robot_frame[:, 1])
 
-    #     while len(self.line_plots) > 0:
-    #         ln = self.line_plots.pop()
-    #         ln.remove()
-
-    #     if hasattr(self, 'lines'):
-    #         x = np.linspace(-4, 4, 100)
-    #         for line in self.lines:
-    #             y = line[0] * x + line[1]
-    #             ln, = self.ax.plot(x, y, 'r-', linewidth=2)
-    #             self.line_plots.append(ln)
-            
-                    # if self.have_points_near_intersection(self.inliers[i], intersection) and self.have_points_near_intersection(self.inliers[j], intersection):
-                    #     print(self.compute_angle_between_lines(self.lines[i], self.lines[j]))
-                    #     if np.abs(self.compute_angle_between_lines(self.lines[i], self.lines[j])) > 0.15:
-                    #        self.intersections.append(intersection)
-    
-    # def have_points_near_intersection(self, points, intersection, threshold = 0.25):
-    #     return np.any(np.linalg.norm(points - intersection, axis=1) < threshold)
-    
-    # def compute_angle_between_lines(self, line1, line2):
-    #     return np.arctan((line2[0] - line1[0]) / (1 + line1[0] * line2[0]))
-    
 if __name__ == '__main__':
     rospy.init_node('map_localisation')
 
     # Set parameters and create map localisation object
-
     scan_topic = rospy.get_param('~scan_topic')
     map_path = rospy.get_param('/map_path')
     odom_topic = rospy.get_param('~odom_topic')
