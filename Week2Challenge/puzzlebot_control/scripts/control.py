@@ -147,9 +147,9 @@ class Puzzlebot_controller():
                             angular = Vector3(x = 0.0, y = 0.0, z = 0.0))
         
         # Not aligned
-        if e_w != 0.0:
+        if e_w != 0:
             twist_msg.angular.z = (self.kp_w * e_w) + (self.ki_w * self.ei_w) + (self.kd_w * e_dot_w)
-        elif e_l != 0.0: # If aligned
+        elif e_l != 0: # If aligned
             twist_msg.linear.x = (self.kp_l * e_l) + (self.ki_l * self.ei_l) + (self.kd_l * e_dot_l)
         else: # Reached Goal
             rospy.logwarn(f'Goal {self.current_goal} reached')
