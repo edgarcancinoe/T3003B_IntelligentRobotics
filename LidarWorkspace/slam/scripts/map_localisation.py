@@ -259,7 +259,6 @@ class MapLocalisation:
                 pose = Pose(position=Point(x=candidate_landmark[0], y=candidate_landmark[1], z=0.0),
                                  orientation=Quaternion(x=0.0,y=0.0,z=0.0,w=1.0))
                 detected_landmarks.poses.append(pose)
-                pass
         
         # Send located landmarks
         self.landmark_detection_publisher.publish(detected_landmarks)
